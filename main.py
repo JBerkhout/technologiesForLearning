@@ -110,6 +110,12 @@ def setup():
     plt.legend(bbox_to_anchor=(1, 1), loc="upper left")
     plt.show()
 
+
+    # There are 43 students.
+    # Presentation groups are either 1 or 2 students, so there should be either 41 or 42 peer reviews for each
+    # presentation. However, some students might not have filled in the review.
+    # There should never be more than 42 peer-reviews for a presentation.
+
     topic_names = get_topics_names_dict()
     topic_presenters = get_topic_presenters_dict()
 
@@ -117,15 +123,30 @@ def setup():
     self_assessors = are_there_self_assessors(topic_presenters, dataDict)
     print("Are there any self assessors?", self_assessors)
 
-    # There are 43 students.
-    # Presentation groups are either 1 or 2 students, so there should be either 41 or 42 peer reviews for each
-    # presentation. However, some students might not have filled in the review.
-    # There should never be more than 42 peer-reviews for a presentation.
-
     # Sanity check: are there duplicate reviews for a presentation?
     are_there_duplicates = are_there_duplicate_reviews(dataDict)
     print("Are there duplicate reviews for any of the presentations?", are_there_duplicates)
 
+    # Sanity check: did all students in the same presentation get grades from the teacher?
+    presenters_same_grade = presenters_same_grades(topic_presenters, dataDict)
+    print("Do students from the same presentation get the same grades?", presenters_same_grade)
+
+
+
+def presenters_same_grades(topic_presenters, dataDict):
+    for topic in range(1, 23):
+        presenters = topic_presenters.get(topic)
+        df = dataDict['main']
+        str_presenters = []
+        for pres in presenters:
+            str_presenters.append(str(pres))
+
+        if len(str_presenters) == 2:
+            presentation_grades = df.loc[df['User'].isin(presenters)]
+            for col_num in list(dataDict['main'].keys())[1:9]:
+                if not presentation_grades[col_num].is_unique:
+                    return True
+        return False
 
 
 def are_there_self_assessors(topic_presenters, dataDict):
@@ -147,9 +168,6 @@ def are_there_duplicate_reviews(dataDict):
         if not df['User'].is_unique:
             return True
     return False
-
-
-
 
 
 
