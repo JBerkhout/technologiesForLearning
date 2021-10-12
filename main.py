@@ -92,7 +92,6 @@ def setup():
     print(topics)
 
     # try whether it is easy to see outstanding graders
-
     x = []
     y = []
     nr = 0
@@ -146,7 +145,7 @@ def presenters_same_grades(topic_presenters, dataDict):
             for col_num in list(dataDict['main'].keys())[1:9]:
                 if not presentation_grades[col_num].is_unique:
                     return True
-        return False
+    return False
 
 
 def are_there_self_assessors(topic_presenters, dataDict):
