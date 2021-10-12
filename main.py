@@ -113,8 +113,19 @@ def setup():
     topic_names = get_topics_names_dict()
     topic_presenters = get_topic_presenters_dict()
 
+    # Sanity check: are there self assessors?
     self_assessors = are_there_self_assessors(topic_presenters, dataDict)
     print("Are there any self assessors?", self_assessors)
+
+    # There are 43 students.
+    # Presentation groups are either 1 or 2 students, so there should be either 41 or 42 peer reviews for each
+    # presentation. However, some students might not have filled in the review.
+    # There should never be more than 42 peer-reviews for a presentation.
+
+    # Sanity check: are there duplicate reviews for a presentation?
+    are_there_duplicates = are_there_duplicate_reviews(dataDict)
+    print("Are there duplicate reviews for any of the presentations?", are_there_duplicates)
+
 
 
 def are_there_self_assessors(topic_presenters, dataDict):
@@ -126,6 +137,15 @@ def are_there_self_assessors(topic_presenters, dataDict):
             return True
         #print("No self assessors for topic", str(topic), "? ", self_assessments.empty)
         #print("Self assessments topic ", str(topic), " = ", df.loc[df['User'].isin(topic_presenters.get(topic))])
+    return False
+
+
+def are_there_duplicate_reviews(dataDict):
+    for topic in range(1, 23):
+        topic_string = 'topic' + str(topic)
+        df = dataDict[topic_string]
+        if not df['User'].is_unique:
+            return True
     return False
 
 
