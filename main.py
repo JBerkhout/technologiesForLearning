@@ -141,9 +141,9 @@ def presenters_same_grades(topic_presenters, dataDict):
             str_presenters.append(str(pres))
 
         if len(str_presenters) == 2:
-            presentation_grades = df.loc[df['User'].isin(presenters)]
+            presentation_grades = df.loc[df['User'].isin(str_presenters)]
             for col_num in list(dataDict['main'].keys())[1:9]:
-                if not presentation_grades[col_num].is_unique:
+                if presentation_grades[col_num].is_unique:
                     return True
     return False
 
