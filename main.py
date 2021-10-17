@@ -130,6 +130,10 @@ def setup():
     presenters_same_grade = presenters_same_grades(topic_presenters, dataDict)
     print("Do students from the same presentation get the same grades?", presenters_same_grade)
 
+    # Make a list of amount of review per student.
+    review_amount_list = get_review_amount_list(dataDict)
+    print("Dictionary with keys the students and values lists of what presentations they reviewed:")
+    print(review_amount_list)
 
 
 def presenters_same_grades(topic_presenters, dataDict):
@@ -167,6 +171,21 @@ def are_there_duplicate_reviews(dataDict):
         if not df['User'].is_unique:
             return True
     return False
+
+
+def get_review_amount_list(dataDict):
+    review_amounts_dict = {}
+
+    for student in range(1, 45):
+        review_amounts_dict[student] = []
+
+    for topic in range(1, 22):
+        tab_name = 'topic' + str(topic)
+        df = dataDict[tab_name]
+        for student in range(1, 44):
+            if student in df['User']:
+                review_amounts_dict[student].append(topic)
+    return review_amounts_dict
 
 
 
