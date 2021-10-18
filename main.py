@@ -59,7 +59,7 @@ def get_topics_names_dict():
     return topics_names_dict
 
 
-def setup():
+def pre_analysis():
     dataDict = pd.read_excel("data_v2.xlsx", None)
     print("Number of topic presentation: ", len(dataDict) - 2)  # not main & topics
 
@@ -109,7 +109,10 @@ def setup():
     plt.legend(bbox_to_anchor=(1, 1), loc="upper left")
     plt.show()
 
+    setup(dataDict)
 
+
+def setup(dataDict):
     # There are 43 students.
     # Presentation groups are either 1 or 2 students, so there should be either 41 or 42 peer reviews for each
     # presentation. However, some students might not have filled in the review.
@@ -189,4 +192,4 @@ def get_review_amount_list(dataDict):
 
 
 
-setup()
+pre_analysis()
