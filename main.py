@@ -191,5 +191,5 @@ def get_review_amount_list(dataDict):
     return review_amounts_dict
 
 
-
-pre_analysis()
+# MAIN
+# pre_analysis()

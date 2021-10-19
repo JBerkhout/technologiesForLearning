@@ -111,5 +111,6 @@ def save_topic_variability_excel():
     df.to_excel('topic_variability.xlsx')
 
 
-#save_statistics_excel()
-save_topic_variability_excel()
+# MAIN
+# save_statistics_excel()
+# save_topic_variability_excel()
