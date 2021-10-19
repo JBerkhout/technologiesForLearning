@@ -1,6 +1,5 @@
 import pandas as pd
-import numpy as np
-from main import get_topics_names_dict
+from pre_processing import get_topics_names_dict
 
 # Booleans are used to indicate whether a student has some prior knowledge on a subject or not, meaning
 # whether or not they presented a topic in the same theme.
