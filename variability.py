@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from pre_processing import get_short_rubrics_names_dict
+from pre_processing import get_short_rubrics_names_dict, get_topics_names_dict
 
 
 def compute_variability_statistics():
@@ -14,7 +14,7 @@ def compute_variability_statistics():
         df = data_dict[tab_name]
 
         for rubric in range(1, 9):
-            rubric_grades = df['Grade'+ str(rubric)].tolist()
+            rubric_grades = df['Grade' + str(rubric)].tolist()
             new_dict = {"topic": topic,
                         "rubric": rubric,
                         "mean": np.mean(rubric_grades),
@@ -53,10 +53,10 @@ def read_rubric_variability_statistics():
 
         # Now let's save all this information per rubric in a dictionary.
         rubric_variablility = {
-                        "rubric": rubric,
-                        "total_mean": total_mean,
-                        "mean_std": mean_std,
-                        "mean_variance": mean_variance}
+            "rubric": rubric,
+            "total_mean": total_mean,
+            "mean_std": mean_std,
+            "mean_variance": mean_variance}
         output.append(rubric_variablility)
 
     return output
@@ -87,10 +87,10 @@ def read_topic_variability_statistics():
 
         # Now let's save all this information per rubric in a dictionary.
         rubric_variablility = {
-                        "topic": topic,
-                        "total_mean": total_mean,
-                        "mean_std": mean_std,
-                        "mean_variance": mean_variance}
+            "topic": topic,
+            "total_mean": total_mean,
+            "mean_std": mean_std,
+            "mean_variance": mean_variance}
         output.append(rubric_variablility)
 
     return output
@@ -124,6 +124,93 @@ def plot_rubric_variability():
     plt.ylabel('Variance')
     plt.show()
 
+
+def plot_topic_variability():
+    out = read_topic_variability_statistics()
+    df = pd.DataFrame.from_dict(out)
+    topic_names = df.topic.map(get_topics_names_dict())
+    plt.bar(topic_names, df.mean_variance)
+    plt.title('Bar plot of variability per topic')
+    plt.xticks(rotation='vertical')
+    plt.xlabel('Topic')
+    plt.ylabel('Variance')
+    plt.show()
+
+
+def plot_topic_variability_theme_grouped():
+    out = read_topic_variability_statistics()
+    df = pd.DataFrame.from_dict(out)
+    topic_names = df.topic.map(get_topics_names_dict())
+    # topic_categories = [topic_name[0:3] for topic_name in topic_names]
+    # topic_category_division = [[topic_cat[0], topic_cat[2]] for topic_cat in topic_categories]
+
+    # (manually) specifying which topics belong to which theme
+    y_t1 = df.mean_variance[0:6]
+    y_t2 = df.mean_variance[6:9]
+    y_t3 = df.mean_variance[9:13]
+    y_t4 = df.mean_variance[13:16]
+    y_t5 = df.mean_variance[16:22]
+
+    # ensuring correct spacing between topics
+    x_t1 = np.arange(len(y_t1))
+    x_t2 = 1 + np.arange(len(y_t2)) + len(y_t1)
+    x_t3 = 2 + np.arange(len(y_t3)) + len(y_t1) + len(y_t2)
+    x_t4 = 3 + np.arange(len(y_t4)) + len(y_t1) + len(y_t2) + len(y_t3)
+    x_t5 = 4 + np.arange(len(y_t5)) + len(y_t1) + len(y_t2) + len(y_t3) + len(y_t4)
+
+    fig, ax = plt.subplots()
+    ax.bar(x_t1, y_t1, color='r', label="1 Student Modelling")
+    ax.bar(x_t2, y_t2, color='b', label="2 Assessment")
+    ax.bar(x_t3, y_t3, color='g', label="3 Adaptation")
+    ax.bar(x_t4, y_t4, color='y', label="4 Intelligent Tutoring Systems")
+    ax.bar(x_t5, y_t5, color='black', label="5 Big Educational Data")
+    ax.set_title('Bar plot of variability per topic grouped per theme')
+    ax.set_ylabel('Variance')
+    ax.set_xlabel('Topic')
+    ax.set_xticks(np.concatenate((x_t1, x_t2, x_t3, x_t4, x_t5)))
+    ax.set_xticklabels(topic_names, rotation='vertical')
+    ax.legend()
+    plt.show()
+
+
+def plot_topic_variability_day_grouped():
+    out = read_topic_variability_statistics()
+    df = pd.DataFrame.from_dict(out)
+    topic_names = df.topic.map(get_topics_names_dict())
+
+    # (manually) specifying which topics belong to which presentation day
+    y_d1 = df.mean_variance[0:3]
+    y_d2 = df.mean_variance[3:6]
+    y_d3 = df.mean_variance[6:9]
+    y_d4 = df.mean_variance[9:13]
+    y_d5 = df.mean_variance[13:16]
+    y_d6 = df.mean_variance[16:19]
+    y_d7 = df.mean_variance[19:22]
+
+    # ensuring correct spacing between topics
+    x_t1 = np.arange(len(y_d1))
+    x_t2 = 1 + np.arange(len(y_d2)) + len(y_d1)
+    x_t3 = 2 + np.arange(len(y_d3)) + len(y_d1) + len(y_d2)
+    x_t4 = 3 + np.arange(len(y_d4)) + len(y_d1) + len(y_d2) + len(y_d3)
+    x_t5 = 4 + np.arange(len(y_d5)) + len(y_d1) + len(y_d2) + len(y_d3) + len(y_d4)
+    x_t6 = 5 + np.arange(len(y_d6)) + len(y_d1) + len(y_d2) + len(y_d3) + len(y_d4) + len(y_d5)
+    x_t7 = 6 + np.arange(len(y_d7)) + len(y_d1) + len(y_d2) + len(y_d3) + len(y_d4) + len(y_d5) + len(y_d7)
+
+    fig, ax = plt.subplots()
+    ax.bar(x_t1, y_d1, color='r', label="Day 1")
+    ax.bar(x_t2, y_d2, color='b', label="Day 2")
+    ax.bar(x_t3, y_d3, color='g', label="Day 3")
+    ax.bar(x_t4, y_d4, color='y', label="Day 4")
+    ax.bar(x_t5, y_d5, color='black', label="Day 5")
+    ax.bar(x_t6, y_d6, color='purple', label="Day 6")
+    ax.bar(x_t7, y_d7, color='orange', label="Day 7")
+    ax.set_title('Bar plot of variability per topic grouped per presentation day')
+    ax.set_ylabel('Variance')
+    ax.set_xlabel('Topic')
+    ax.set_xticks(np.concatenate((x_t1, x_t2, x_t3, x_t4, x_t5, x_t6, x_t7)))
+    ax.set_xticklabels(topic_names, rotation='vertical')
+    ax.legend()
+    plt.show()
 
 
 # MAIN

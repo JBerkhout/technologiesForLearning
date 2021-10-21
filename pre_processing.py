@@ -40,7 +40,7 @@ def get_topics_names_dict():
         5: "1.5 Modelling students in serious games",
         6: "1.6 Modelling context in mobile apps",
         7: "2.1 Psychometrics",
-        8: "2.2 computerised adaptive testing",
+        8: "2.2 Computerised adaptive testing",
         9: "2.3 Adaptive estimation",
         10: "3.1 Tutorial dialog systems",
         11: "3.2 Adaptive educational hypermedia",
