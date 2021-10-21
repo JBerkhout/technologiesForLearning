@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+
+from pre_processing import get_short_rubrics_names_dict
 
 
 def compute_variability_statistics():
@@ -109,6 +112,18 @@ def save_topic_variability_excel():
     out = read_topic_variability_statistics()
     df = pd.DataFrame.from_dict(out)
     df.to_excel('topic_variability.xlsx')
+
+
+def plot_rubric_variability():
+    out = read_rubric_variability_statistics()
+    df = pd.DataFrame.from_dict(out)
+    rubric_names = df.rubric.map(get_short_rubrics_names_dict())
+    plt.bar(rubric_names, df.mean_variance)
+    plt.title('Bar plot of variability per rubric')
+    plt.xlabel('Rubric')
+    plt.ylabel('Variance')
+    plt.show()
+
 
 
 # MAIN

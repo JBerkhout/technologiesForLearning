@@ -59,6 +59,34 @@ def get_topics_names_dict():
     return topics_names_dict
 
 
+def get_long_rubrics_names_dict():
+    rubrics_names_dict = {
+        1: "Overall clarity, good structure and high-level overview",
+        2: "Proper aim at the target audience",
+        3: "Adequate presentation skills",
+        4: "Appropriate, professional language",
+        5: "Ability to engage the audience",
+        6: "Adequate answers to questions",
+        7: "Slides adding value to the presentation",
+        8: "Explicit and appealing take-home message",
+    }
+    return rubrics_names_dict
+
+
+def get_short_rubrics_names_dict():
+    rubrics_names_dict = {
+        1: "Overall structure",
+        2: "Proper aim",
+        3: "Presentation skills",
+        4: "Language",
+        5: "Engaging",
+        6: "Giving answers",
+        7: "Good slides",
+        8: "Take-home message",
+    }
+    return rubrics_names_dict
+
+
 def pre_analysis():
     dataDict = pd.read_excel("data_v2.xlsx", None)
     print("Number of topic presentation: ", len(dataDict) - 2)  # not main & topics
@@ -162,8 +190,8 @@ def are_there_self_assessors(topic_presenters, dataDict):
         self_assessments = df.loc[df['User'].isin(topic_presenters.get(topic))]
         if not self_assessments.empty:
             return True
-        #print("No self assessors for topic", str(topic), "? ", self_assessments.empty)
-        #print("Self assessments topic ", str(topic), " = ", df.loc[df['User'].isin(topic_presenters.get(topic))])
+        # print("No self assessors for topic", str(topic), "? ", self_assessments.empty)
+        # print("Self assessments topic ", str(topic), " = ", df.loc[df['User'].isin(topic_presenters.get(topic))])
     return False
 
 
@@ -189,7 +217,6 @@ def get_review_amount_list(dataDict):
             if student in df['User']:
                 review_amounts_dict[student].append(topic)
     return review_amounts_dict
-
 
 # MAIN
 # pre_analysis()
