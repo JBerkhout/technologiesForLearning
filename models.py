@@ -2,6 +2,7 @@ import math
 import argparse
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 #from neural_network import neural_network_model
 
@@ -159,6 +160,17 @@ def get_reviewer_grade_sets(input_path):
             reviewer_nr += 1
 
     return reviewer_grade_sets
+
+
+def plot_accuracy(input_path):
+    out = accuracy(input_path)
+    users = [i for i in range(1, len(out) + 1)]
+    plt.bar(users, out)
+    plt.title('Bar plot of accuracy for each peer reviewer')
+    plt.xlabel('ID of peer reviewer')
+    plt.ylabel('Accuracy')
+    plt.show()
+
 
 ##############
 ##############
