@@ -15,63 +15,45 @@ def compute_systematic_deviation_statistics():
     spread = sys_spread(grades_list)
     
     # print(high_low)
-    # print(spread)
+    print(spread)
     return(high_low, spread)
 
 # Calculates the systematic deviation for each reviewer. >0 values means positive bias, <0 value means negative bias
 def sys_high_low(grades_list):
     # Calculate the mean grade assigned by each reviewer
     reviewer_grades = grades_list
-    reviewer_means = np.zeros(reviewer_grades.__len__())
-    i = 0
+    reviewer_means = [] # np.zeros(reviewer_grades.__len__())
+    # i = 0
     for reviewer in reviewer_grades:
-        reviewer_means[i] = average(reviewer)
-        i += 1
+        if(not average(reviewer) == None): # Catch bad guy 18 who never handed in any reviews
+            reviewer_means.append(average(reviewer))
+    #    i += 1
 
     # For each reviewer, calculate the difference between their mean and the mean of the other means
     reviewer_bias = np.zeros(reviewer_means.__len__())
     i = 0
     while i < reviewer_bias.__len__():
-        # Loop over all reviewers, make a list with all reviewers except the current one
-        otherReviewers = []
-        j = 0
-        while j < reviewer_means.__len__():
-            if(j == i or math.isnan(reviewer_means[j])):
-                j += 1
-                continue
-            otherReviewers.append(reviewer_means[j])
-            j += 1
         # Calculate the individual systematic bias
-        reviewer_bias[i] = reviewer_means[i] - average(otherReviewers)
+        reviewer_bias[i] = reviewer_means[i] - average(reviewer_means)
         i += 1
     return(reviewer_bias)
 
 # Calculate the difference in std compared to the average std of the rest of the reviewers
 def sys_spread(grades_list):
     # Start by calculating the standard deviation per reviewer
-    std_per_reviewer = np.zeros(grades_list.__len__())
-    h = 0
+    std_per_reviewer = []
     for reviewer in grades_list:
-        std_per_reviewer[h] = np.std(reviewer, ddof=1)
-        h += 1
-    
+        if(not reviewer == []): # Catch bad guy 18 who never handed in any reviews
+            std_per_reviewer.append(np.std(reviewer, ddof=1))
+
     # print(std_per_reviewer)
 
     # For each reviewer, calculate the difference between their standard deviation and the mean of the other standard deviations
     reviewer_range = np.zeros(std_per_reviewer.__len__())
     i = 0
     while i < reviewer_range.__len__():
-        # Loop over all reviewers, make a list with all reviewers std except the current one
-        otherReviewers = []
-        j = 0
-        while j < std_per_reviewer.__len__():
-            if(j == i or math.isnan(std_per_reviewer[j])):
-                j += 1
-                continue
-            otherReviewers.append(std_per_reviewer[j])
-            j += 1
         # Calculate the systematic range bias
-        reviewer_range[i] = std_per_reviewer[i] - average(otherReviewers)
+        reviewer_range[i] = std_per_reviewer[i] - average(std_per_reviewer)
         i += 1
     return reviewer_range
 
