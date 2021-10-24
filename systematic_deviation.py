@@ -99,3 +99,27 @@ def list_grades_per_reviewer(data_dict):
             i += 1
     # reviewer_grades now contains for each reviewer (index, note that reviewer 1 has index 0) a list of all grades assigned
     return reviewer_grades
+
+
+def plot_sys_dev_highlow():
+    out, _ = compute_systematic_deviation_statistics()
+    users = [i for i in range(1, len(out) + 2)]
+    bad_user = 18
+    users = users[:bad_user - 1] + users[bad_user:]
+    plt.bar(users, out)
+    plt.title('Bar plot of systematic high/low individual peer bias')
+    plt.xlabel('ID of peer reviewer')
+    plt.ylabel('Systematic high/low peer bias')
+    plt.show()
+
+
+def plot_sys_dev_broadnarrow():
+    _, out = compute_systematic_deviation_statistics()
+    users = [i for i in range(1, len(out) + 2)]
+    bad_user = 18
+    users = users[:bad_user - 1] + users[bad_user:]
+    plt.bar(users, out)
+    plt.title('Bar plot of systematic broad/narrow individual peer bias')
+    plt.xlabel('ID of peer reviewer')
+    plt.ylabel('Systematic broad/narrow peer bias')
+    plt.show()
