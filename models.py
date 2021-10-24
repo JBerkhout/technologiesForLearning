@@ -44,8 +44,11 @@ def main(args):
 
 # The simplest model, only based on accuracy
 def simple_model(input_path):
-    model = accuracy(args.input)
-    return model
+    score = []
+    model = accuracy(input_path)
+    for reviewer_score in model:
+        score.append(max(1, min(10, (10 - (reviewer_score - 0.5) * 5))))
+    return score
 
 
 def run_nn(args):
