@@ -78,13 +78,17 @@ def run_nn(args):
 # Takes two arguments: array of reviewer grades per presentation
 # And an array of true trades
 # Returns an array with a simple accuracy measure
-def accuracy(input_path):
+def accuracy(input_path, split_topics=False):
     reviewer_grade_sets = get_reviewer_grade_sets(input_path) # currently NUMPY array with shape(nr_reviewers, nr_topics, nr_rubrics)
     true_grade_sets = get_true_grade_sets(input_path)
 
     total_grades_counted = np.zeros(22)
     total_grades_difference = np.zeros(22)
-    total_accuracy = np.zeros(22)
+
+    if not split_topics:
+        total_accuracy = np.zeros(22)
+    else:
+        total_accuracy = np.zeros(shape=(44, 22)) # nr of reviewers, topics
 
     i = 0
     while (i < reviewer_grade_sets.__len__()):
@@ -102,12 +106,21 @@ def accuracy(input_path):
                 total_grades_difference[j] += np.abs(true_grade_sets[j][h] - reviewer_grade_sets[i][j][h])
                 total_grades_counted[j] += 1
                 h += 1
-            if(total_grades_counted[j] == 0):
-                total_accuracy[j] = math.nan
+
+            if not split_topics:
+                if total_grades_counted[j] == 0:
+                    total_accuracy[j] = math.nan
+                else:
+                    total_accuracy[j] = total_grades_difference[j] / total_grades_counted[j]
             else:
-                total_accuracy[j] = total_grades_difference[j] / total_grades_counted[j]
+                if total_grades_counted[j] == 0:
+                    total_accuracy[i][j] = math.nan
+                else:
+                    total_accuracy[i][j] = total_grades_difference[j] / total_grades_counted[j]  # 8 = nr of rubrics
+
             j += 1
         i += 1
+
     return total_accuracy
 
 # Returns the true grades as given by the teacher.
@@ -169,6 +182,26 @@ def plot_accuracy(input_path):
     plt.title('Bar plot of accuracy for each peer reviewer')
     plt.xlabel('ID of peer reviewer')
     plt.ylabel('Accuracy')
+    plt.show()
+
+
+def plot_accuracy_topics(input_path):
+    # to change to accuracy over time [simply by looking at topic IDs becoming higher]
+    out = accuracy(input_path, split_topics=True)
+    topics = [i for i in range(1, 22+1)]  # 22 = nr of topics, not dynamic yet...
+    for reviewer in range(0, len(out)):
+        reviewed_topics = [acc for acc in out[reviewer] if not math.isnan(acc)]
+        accuracies = np.empty(len(topics))
+        accuracies[:] = np.nan
+        accuracies[:len(reviewed_topics)] = reviewed_topics
+        print(accuracies)
+        plt.plot(topics, accuracies, 'o-')
+        # plt.plot(topics, out[reviewer], 'o-') # to simply plot accuracy per topic
+    plt.title('Bar plot of accuracy for each peer reviewer')
+    # plt.xlabel('ID of topic') # to simply plot accuracy per topic
+    plt.xlabel('Number of presentations reviewed')
+    plt.ylabel('Accuracy')
+    plt.grid(True)
     plt.show()
 
 
