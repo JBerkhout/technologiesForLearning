@@ -62,7 +62,7 @@ def read_rubric_variability_statistics():
     return output
 
 
-def read_topic_variability_statistics():
+def read_topic_variability_statistics(correct_format=True):
     # Let's infer some information from the statistics.xlsx
     variability_data = pd.read_excel("variability_statistics.xlsx", None)
     df = variability_data['Sheet1']
@@ -78,20 +78,26 @@ def read_topic_variability_statistics():
         # Now let's see if students agree more with each other (less variability) on certain topics.
         std_list = topic_selection['std'].tolist()
         mean_std = np.mean(std_list)
-        # So this value above is the average standard deviation for each rubric.
+        # So this value above is the average standard deviation for each topic.
 
         # Let's do the same for variance, in case we want to use that instead of std.
         variance_list = topic_selection['variance'].tolist()
         mean_variance = np.mean(variance_list)
-        # So this value above is the average variance for each rubric.
+        # So this value above is the average variance for each topic.
 
         # Now let's save all this information per rubric in a dictionary.
-        rubric_variablility = {
+        topic_variability = {
             "topic": topic,
             "total_mean": total_mean,
             "mean_std": mean_std,
             "mean_variance": mean_variance}
-        output.append(rubric_variablility)
+        output.append(topic_variability)
+
+    if correct_format:
+        formatted_output = np.zeros(len(output))
+        for i_topic in range(len(output)):
+            formatted_output[i_topic] = output[i_topic]["mean_variance"]
+        return formatted_output
 
     return output
 
@@ -109,7 +115,7 @@ def save_rubric_variability_excel():
 
 
 def save_topic_variability_excel():
-    out = read_topic_variability_statistics()
+    out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     df.to_excel('topic_variability.xlsx')
 
@@ -126,7 +132,7 @@ def plot_rubric_variability():
 
 
 def plot_topic_variability():
-    out = read_topic_variability_statistics()
+    out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     topic_names = df.topic.map(get_topics_names_dict())
     plt.bar(topic_names, df.mean_variance)
@@ -138,7 +144,7 @@ def plot_topic_variability():
 
 
 def plot_topic_variability_theme_grouped():
-    out = read_topic_variability_statistics()
+    out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     topic_names = df.topic.map(get_topics_names_dict())
     # topic_categories = [topic_name[0:3] for topic_name in topic_names]
@@ -174,7 +180,7 @@ def plot_topic_variability_theme_grouped():
 
 
 def plot_topic_variability_day_grouped():
-    out = read_topic_variability_statistics()
+    out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     topic_names = df.topic.map(get_topics_names_dict())
 
