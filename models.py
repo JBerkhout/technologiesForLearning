@@ -3,6 +3,9 @@ import argparse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pandas.core.frame import DataFrame
+
+import variability
 
 #from neural_network import neural_network_model
 
@@ -22,8 +25,42 @@ def main(args):
         if (name == "test"):
             # Run model named "test"
             print("Not implemented yet")
-        elif (name == "simple"):
-            print(simple_model(args.input))
+
+        elif (name == "accuracy"):
+            print(r_simple_model(args.input))
+
+        elif (name == "validity"):
+            # Solo: validity
+            print()
+
+        elif (name == "reliability"):
+            # Solo: reliability
+            print()
+            
+        elif (name == "sys_dev_high"):
+            # Solo: systematic deviation: high/low
+            print()
+        
+        elif (name == "sys_dev_wide"):
+            # Solo: systematic deviation: broad/narrow
+            print()
+            
+        elif (name == "sys_dev_order"):
+            # Solo: systematic deviation: relative ordering
+            print()
+        
+        elif (name == "sys_dev_full"):
+            # Combined: all systematic deviation metrics
+            print()
+        
+        elif (name == "val_rel"):
+            # Combined: validity and reliability
+            print()
+        
+        elif (name == "geyser"):
+            # Combined: # of reviews handed in, length of comments and consistency (variability of grades of a single student)
+            print()
+        
         else:
             print("Model name not found")
 
@@ -32,6 +69,39 @@ def main(args):
         if (name == "test"):
             # Run model named "test"
             print("Not implemented yet")
+
+        elif (name == "validity"):
+            # Solo: validity
+            print()
+
+        elif (name == "reliability"):
+            # Solo: reliability
+            print()
+            
+        elif (name == "sys_dev_high"):
+            # Solo: systematic deviation: high/low
+            print()
+        
+        elif (name == "sys_dev_wide"):
+            # Solo: systematic deviation: broad/narrow
+            print()
+            
+        elif (name == "sys_dev_order"):
+            # Solo: systematic deviation: relative ordering
+            print()
+        
+        elif (name == "sys_dev_full"):
+            # Combined: all systematic deviation metrics
+            print()
+        
+        elif (name == "val_rel"):
+            # Combined: validity and reliability
+            print()
+        
+        elif (name == "geyser"):
+            # Combined: # of reviews handed in, length of comments and consistency (variability of grades of a single student)
+            print()
+            
         else:
             print("Model name not found")
     else:
@@ -44,15 +114,21 @@ def main(args):
 ### Write functions for calculating a certain model here. Use methods below for accessing metrics
 
 # The simplest model, only based on accuracy
-def simple_model(input_path):
+def r_simple_model(input_path):
     score = []
     model = accuracy(input_path)
     for reviewer_score in model:
         score.append(max(1, min(10, (10 - (reviewer_score - 0.5) * 5))))
     return score
 
-
-def run_nn(args):
+# Simple neural network model, accuracy as labels, variability and grades(?) as input
+def nn_variability_model(input_path):
+    # Input: 
+    # - Variability statistics
+    # - All grades?
+    # Labels: Accuracy?
+    var_dict = variability.compute_variability_statistics()
+    print(var_dict)
     # TODO: process input data
     training_data = 0
     training_labels = 0
@@ -62,6 +138,7 @@ def run_nn(args):
 
     data = 0
 
+# DISABLE IF YOU GET ERROR: CORE DUMPED
     #model = neural_network_model(args.model, 4)
     #model.train(training_data, training_labels, test_data, test_labels, 64, 8)
     #predicted_grade = model.predict(data)
@@ -181,7 +258,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--modeltype', choices=["rule","nn"],
                         help='The type of model you want to use')
 
-    parser.add_argument('-m', '--modelname', choices=["test","simple"], default="test",
+    parser.add_argument('-m', '--modelname', choices=["test","accuracy","validity","reliability","sys_dev_high","sys_dev_wide","sys_dev_order","sys_dev_full","val_rel","geyser"], default="accuracy",
                         help='The name of the model you want to use')
 
     parser.add_argument('-i', '--input',
