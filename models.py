@@ -188,7 +188,6 @@ def accuracy(input_path, split_topics=False):
                 total_topic_accuracy[i][j] = math.nan
             else:
                 total_topic_accuracy[i][j] = np.nanmean(total_grades_difference)  # 8 = nr of rubrics
-            print(total_topic_accuracy[i])
 
             total_grades_difference = np.zeros(nr_rubrics)
             total_grades_counted = 0
@@ -247,7 +246,7 @@ def get_reviewer_grade_sets(input_path):
                 else:
                     grades.append(grade_to_add[0])
 
-            reviewer_grade_sets[reviewer_nr-1][topic-1] = grades # bye bye .append
+            reviewer_grade_sets[reviewer_nr-1][topic-1] = grades
             reviewer_nr += 1
 
     return reviewer_grade_sets
@@ -257,39 +256,42 @@ def plot_accuracy(input_path):
     out = accuracy(input_path)
     users = [i for i in range(1, len(out) + 1)]
     plt.bar(users, out)
-    plt.title('Bar plot of inaccuracy for each peer reviewer')  # TODO: atm inaccuracy function
+    plt.title('Bar plot of inaccuracy for each peer reviewer')
     plt.xlabel('ID of peer reviewer')
-    plt.ylabel('Inaccuracy')  # see the to do above
+    plt.ylabel('Inaccuracy')
     plt.show()
 
 
 def plot_accuracy_topics(input_path):
-    # to change to accuracy over time [simply by looking at topic IDs becoming higher]
     out = accuracy(input_path, split_topics=True)
     topics = [i for i in range(1, 22+1)]  # 22 = nr of topics, not dynamic yet...
     for reviewer in range(0, len(out)):
         plt.plot(topics, out[reviewer], 'o-')
-    plt.title('Bar plot of inaccuracy for each peer reviewer')  # see the to do above
+    plt.title('Bar plot of inaccuracy for each peer reviewer')
     plt.xlabel('ID of topic')
-    plt.ylabel('Inaccuracy')  # see the to do above
+    plt.ylabel('Inaccuracy')
     plt.grid(True)
     plt.show()
 
 
+def accuracy_per_topic(input_path):
+    return [trim_mean(revs_accs[~np.isnan(revs_accs)], 0.1) for revs_accs in np.transpose(accuracy(input_path, split_topics=True))]
+
+
+# accuracy over time [by looking at the mean accuracy of different topics]
 def plot_accuracy_per_topic(input_path):
-    # to change to accuracy over time [simply by looking at topic IDs becoming higher]
-    out = [trim_mean(revs_accs[~np.isnan(revs_accs)], 0.1) for revs_accs in np.transpose(accuracy(input_path, split_topics=True))]
+    out = accuracy_per_topic(input_path)
     topics = [i for i in range(1, 22+1)]  # 22 = nr of topics, not dynamic yet...
     plt.plot(topics, out, 'o-')
-    plt.title('Bar plot of inaccuracy for trimmed average of peer reviewers')  # see the to do above
+    plt.title('Bar plot of inaccuracy for trimmed average of peer reviewers')
     plt.xlabel('ID of topic')
-    plt.ylabel('Inaccuracy')  # see the to do above
+    plt.ylabel('Inaccuracy')
     plt.grid(True)
     plt.show()
 
 
+# accuracy over time [by looking at increasing number of topics reviewed]
 def plot_accuracy_nr_topics(input_path):
-    # to change to accuracy over time [by looking at increasing number of topics reviewed]
     out = accuracy(input_path, split_topics=True)
     topics = [i for i in range(1, 22+1)]  # 22 = nr of topics, not dynamic yet...
     for reviewer in range(0, len(out)):
@@ -299,9 +301,9 @@ def plot_accuracy_nr_topics(input_path):
         accuracies[:len(reviewed_topics)] = reviewed_topics
         print(accuracies)
         plt.plot(topics, accuracies, 'o-')
-    plt.title('Bar plot of inaccuracy for each peer reviewer')  # see the to do above
+    plt.title('Bar plot of inaccuracy for each peer reviewer')
     plt.xlabel('Number of presentations reviewed')
-    plt.ylabel('Inaccuracy')  # see the to do above
+    plt.ylabel('Inaccuracy')
     plt.grid(True)
     plt.show()
 
