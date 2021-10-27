@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,7 +7,8 @@ import matplotlib.pyplot as plt
 from pre_processing import get_short_rubrics_names_dict, get_topics_names_dict
 
 
-def compute_variability_statistics():
+# Compute the variability statistics on all topics and return this in a list of dicts.
+def compute_variability_statistics() -> List[Dict[str, float]]:
     data_dict = pd.read_excel("data_v2.xlsx", None)
     output = []
 
@@ -28,7 +31,8 @@ def compute_variability_statistics():
     return output
 
 
-def read_rubric_variability_statistics():
+# Method to analyze the variability statistics. Returns list with dicts.
+def read_rubric_variability_statistics() -> List[Dict[str, float]]:
     # Let's infer some information from the statistics.xlsx
     variability_data = pd.read_excel("variability_statistics.xlsx", None)
     df = variability_data['Sheet1']
@@ -62,6 +66,7 @@ def read_rubric_variability_statistics():
     return output
 
 
+# Method to analyze the variability statistics. Returns list with dicts.
 def read_topic_variability_statistics(correct_format=True):
     # Let's infer some information from the statistics.xlsx
     variability_data = pd.read_excel("variability_statistics.xlsx", None)
@@ -102,25 +107,28 @@ def read_topic_variability_statistics(correct_format=True):
     return output
 
 
-def save_statistics_excel():
+# Save statistics to Excel file.
+def save_statistics_excel() -> None:
     out = compute_variability_statistics()
     df = pd.DataFrame.from_dict(out)
     df.to_excel('variability_statistics.xlsx')
 
 
-def save_rubric_variability_excel():
+# Save variability per rubric to Excel file.
+def save_rubric_variability_excel() -> None:
     out = read_rubric_variability_statistics()
     df = pd.DataFrame.from_dict(out)
     df.to_excel('rubric_variability.xlsx')
 
 
-def save_topic_variability_excel():
+# Save variability per topic to Excel file.
+def save_topic_variability_excel() -> None:
     out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     df.to_excel('topic_variability.xlsx')
 
 
-def plot_rubric_variability():
+def plot_rubric_variability() -> None:
     out = read_rubric_variability_statistics()
     df = pd.DataFrame.from_dict(out)
     rubric_names = df.rubric.map(get_short_rubrics_names_dict())
@@ -131,7 +139,7 @@ def plot_rubric_variability():
     plt.show()
 
 
-def plot_topic_variability():
+def plot_topic_variability() -> None:
     out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     topic_names = df.topic.map(get_topics_names_dict())
@@ -143,7 +151,7 @@ def plot_topic_variability():
     plt.show()
 
 
-def plot_topic_variability_theme_grouped():
+def plot_topic_variability_theme_grouped() -> None:
     out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     topic_names = df.topic.map(get_topics_names_dict())
@@ -179,7 +187,7 @@ def plot_topic_variability_theme_grouped():
     plt.show()
 
 
-def plot_topic_variability_day_grouped():
+def plot_topic_variability_day_grouped() -> None:
     out = read_topic_variability_statistics(False)
     df = pd.DataFrame.from_dict(out)
     topic_names = df.topic.map(get_topics_names_dict())
@@ -220,5 +228,6 @@ def plot_topic_variability_day_grouped():
 
 
 # MAIN
-# save_statistics_excel()
-# save_topic_variability_excel()
+#save_statistics_excel()
+#save_topic_variability_excel()
+#save_rubric_variability_excel()

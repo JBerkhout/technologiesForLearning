@@ -1,9 +1,12 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+from typing import Dict, List
 
 
-def get_topic_presenters_dict():
+# Returns an dictionary with the keys being topics and values an array with the students that presented that topic.
+def get_topic_presenters_dict() -> Dict[int, List[int]]:
     topic_presenters_dict = {
         1: [8, 41],
         2: [11, 14],
@@ -31,7 +34,8 @@ def get_topic_presenters_dict():
     return topic_presenters_dict
 
 
-def get_topics_names_dict():
+# Returns an dictionary with the keys being topics and values a string with the topic name.
+def get_topics_names_dict() -> Dict[int, str]:
     topics_names_dict = {
         1: "1.1 Modelling affective state",
         2: "1.2 Modelling metacognitive state",
@@ -59,7 +63,8 @@ def get_topics_names_dict():
     return topics_names_dict
 
 
-def get_long_rubrics_names_dict():
+# Returns an dictionary with the keys being rubric number and values a string with the full rubric descriptions.
+def get_long_rubrics_names_dict() -> Dict[int, str]:
     rubrics_names_dict = {
         1: "Overall clarity, good structure and high-level overview",
         2: "Proper aim at the target audience",
@@ -73,7 +78,8 @@ def get_long_rubrics_names_dict():
     return rubrics_names_dict
 
 
-def get_short_rubrics_names_dict():
+# Returns an dictionary with the keys being rubric number and values a string with the shorted rubric description.
+def get_short_rubrics_names_dict() -> Dict[int, str]:
     rubrics_names_dict = {
         1: "Overall structure",
         2: "Proper aim",
@@ -87,7 +93,8 @@ def get_short_rubrics_names_dict():
     return rubrics_names_dict
 
 
-def pre_analysis():
+# The pre-analysis from the Jupiter Notebook
+def pre_analysis() -> None:
     dataDict = pd.read_excel("data_v2.xlsx", None)
     print("Number of topic presentation: ", len(dataDict) - 2)  # not main & topics
 
@@ -140,7 +147,8 @@ def pre_analysis():
     setup(dataDict)
 
 
-def setup(dataDict):
+# Method that calls various sanity checks on the database.
+def setup(data_dict: pd.DataFrame) -> None:
     # There are 43 students.
     # Presentation groups are either 1 or 2 students, so there should be either 41 or 42 peer reviews for each
     # presentation. However, some students might not have filled in the review.
@@ -150,43 +158,48 @@ def setup(dataDict):
     topic_presenters = get_topic_presenters_dict()
 
     # Sanity check: are there self assessors?
-    self_assessors = are_there_self_assessors(topic_presenters, dataDict)
+    self_assessors = are_there_self_assessors(topic_presenters, data_dict)
     print("Are there any self assessors?", self_assessors)
 
     # Sanity check: are there duplicate reviews for a presentation?
-    are_there_duplicates = are_there_duplicate_reviews(dataDict)
+    are_there_duplicates = are_there_duplicate_reviews(data_dict)
     print("Are there duplicate reviews for any of the presentations?", are_there_duplicates)
 
     # Sanity check: did all students in the same presentation get grades from the teacher?
-    presenters_same_grade = presenters_same_grades(topic_presenters, dataDict)
+    presenters_same_grade = presenters_same_grades(topic_presenters, data_dict)
     print("Do students from the same presentation get the same grades?", presenters_same_grade)
 
     # Make a list of amount of review per student.
-    review_amount_list = get_review_amount_list(dataDict)
+    review_amount_list = get_review_amount_list(data_dict)
     print("Dictionary with keys the students and values lists of what presentations they reviewed:")
+    # for i in review_amount_list:
+    #    print(str(i), len(review_amount_list[i]))
     print(review_amount_list)
 
 
-def presenters_same_grades(topic_presenters, dataDict):
+# Checks if all presenters from the same topic get the same grade. Returns True if all presenters from the same topic
+# get the same grades.
+def presenters_same_grades(topic_presenters: Dict[int, List[int]], data_dict: pd.DataFrame) -> bool:
     for topic in range(1, 23):
         presenters = topic_presenters.get(topic)
-        df = dataDict['main']
+        df = data_dict['main']
         str_presenters = []
         for pres in presenters:
             str_presenters.append(str(pres))
 
         if len(str_presenters) == 2:
             presentation_grades = df.loc[df['User'].isin(str_presenters)]
-            for col_num in list(dataDict['main'].keys())[1:9]:
+            for col_num in list(data_dict['main'].keys())[1:9]:
                 if presentation_grades[col_num].is_unique:
                     return True
     return False
 
 
-def are_there_self_assessors(topic_presenters, dataDict):
+# Checks whether there are any students who filled in an review for the presentation they presented themselves.
+def are_there_self_assessors(topic_presenters: Dict[int, List[int]], data_dict: pd.DataFrame) -> bool:
     for topic in range(1, 23):
         topic_string = 'topic' + str(topic)
-        df = dataDict[topic_string]
+        df = data_dict[topic_string]
         self_assessments = df.loc[df['User'].isin(topic_presenters.get(topic))]
         if not self_assessments.empty:
             return True
@@ -195,16 +208,17 @@ def are_there_self_assessors(topic_presenters, dataDict):
     return False
 
 
-def are_there_duplicate_reviews(dataDict):
+# Checks whether there are any students who filled in multiple reviews for the same presentation.
+def are_there_duplicate_reviews(data_dict: pd.DataFrame) -> bool:
     for topic in range(1, 23):
         topic_string = 'topic' + str(topic)
-        df = dataDict[topic_string]
+        df = data_dict[topic_string]
         if not df['User'].is_unique:
             return True
     return False
 
-
-def get_review_amount_list(dataDict):
+# Returns a dict with keys being the students and values an array with all topics they reviewed.
+def get_review_amount_list(data_dict: pd.DataFrame) -> Dict[int, List[int]]:
     review_amounts_dict = {}
 
     for student in range(1, 45):
@@ -212,11 +226,64 @@ def get_review_amount_list(dataDict):
 
     for topic in range(1, 22):
         tab_name = 'topic' + str(topic)
-        df = dataDict[tab_name]
+        df = data_dict[tab_name]
         for student in range(1, 44):
             if student in df['User']:
                 review_amounts_dict[student].append(topic)
     return review_amounts_dict
+
+
+# Returns the true grades as given by the teacher.
+# Returns an array of lists, where each list contains the grades given on the eight rubrics.
+def get_true_grade_sets(input_path: str) -> [List[float]]:
+    # Need to include pre-processing before here!!
+    data_dict = pd.read_excel(input_path, None)
+    df = data_dict['true_grades']
+
+    j = 0
+    true_grades = np.zeros(df.__len__(), dtype=list)
+    while j < df.__len__():
+        grades = []
+        h = 0
+        localdf = df[df["User"] == j + 1]
+        for rubric in range(1, 9):
+            grades.append(localdf['R' + str(rubric)].tolist()[0])
+            h += 1
+        true_grades[j] = grades
+        j += 1
+    return true_grades
+
+
+# Returns a list of arrays of lists contain the grades given by each reviewer for each presentation
+# Basically for each reviewer contains a structure similar to true grades
+def get_reviewer_grade_sets(input_path: str) -> List[List[List[float]]]:
+    data_dict = pd.read_excel(input_path, None)
+
+    reviewer_grade_sets = np.zeros(shape=(44, 22, 8))  # nr of reviewers, topics, rubrics
+
+    for topic in range(1, 23):
+        tab_name = 'topic' + str(topic)
+        df = data_dict[tab_name]
+
+        reviewer_nr = 1
+        while reviewer_nr <= 44:  # df.__len__():
+            grades = []
+            localdf = df[df["User"] == reviewer_nr]
+
+            for rubric in range(1, 9):
+                grade_to_add = localdf['Grade' + str(rubric)].tolist()
+
+                # Add nan if no grade was assigned for this presentation/topic
+                if (grade_to_add.__len__() == 0):
+                    grades.append(math.nan)
+                else:
+                    grades.append(grade_to_add[0])
+
+            reviewer_grade_sets[reviewer_nr - 1][topic - 1] = grades  # bye bye .append
+            reviewer_nr += 1
+
+    return reviewer_grade_sets
+
 
 # MAIN
 # pre_analysis()

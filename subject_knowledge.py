@@ -1,3 +1,5 @@
+from typing import Dict, Tuple, List
+
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -7,7 +9,8 @@ from pre_processing import get_topics_names_dict, get_topic_presenters_dict
 # Booleans are used to indicate whether a student has some prior knowledge on a subject or not, meaning
 # whether or not they presented a topic in the same theme.
 
-def compute_subject_knowledge():
+# Determine the subject knowledge of all students on all topics.
+def compute_subject_knowledge() -> [Dict[str, bool]]:
     data_dict = pd.read_excel("data_v2.xlsx", None)
     df = data_dict['main']
     output = []
@@ -28,13 +31,15 @@ def compute_subject_knowledge():
     return output
 
 
-def save_subject_knowledge_excel():
+# Save the subject knowledge, in booleans, in an Excel file.
+def save_subject_knowledge_excel() -> None:
     out = compute_subject_knowledge()
     df = pd.DataFrame.from_dict(out)
     df.to_excel('subject_knowledge.xlsx')
 
 
-def get_theme_presenters(cur_topic):
+# Returns which students have knowledge on a certain topic.
+def get_theme_presenters(cur_topic: int) -> List[int]:
     users_with_knowledge = []
 
     if cur_topic <= 6:
@@ -54,7 +59,8 @@ def get_theme_presenters(cur_topic):
     return users_with_knowledge
 
 
-def read_topic_variability_statistics_topic_knowledge():
+# Gathers statistics on topic knowledge and returns two lists with a dict per topic
+def read_topic_variability_statistics_topic_knowledge() -> Tuple[Dict[str, float], Dict[str, float]]:
     data_dict = pd.read_excel("data_v2.xlsx", None)
     df_out_with, df_out_without, output_with, output_without = [], [], [], []
 
@@ -115,7 +121,8 @@ def read_topic_variability_statistics_topic_knowledge():
     return output_with, output_without
 
 
-def plot_topic_variability_subject_knowledge():
+# Plot student knowledge per student
+def plot_topic_variability_subject_knowledge() -> None:
     out_with, out_without = read_topic_variability_statistics_topic_knowledge()
     df_with = pd.DataFrame.from_dict(out_with)
     df_without = pd.DataFrame.from_dict(out_without)
@@ -137,7 +144,8 @@ def plot_topic_variability_subject_knowledge():
     plt.show()
 
 
-def plot_topic_variability_theme_grouped_subject_knowledge():
+# Plot student knowledge, grouped per theme.
+def plot_topic_variability_theme_grouped_subject_knowledge() -> None:
     out_with, out_without = read_topic_variability_statistics_topic_knowledge()
     df_with = pd.DataFrame(out_with)
     df_without = pd.DataFrame(out_without)
@@ -186,7 +194,6 @@ def plot_topic_variability_theme_grouped_subject_knowledge():
     ax.set_xticklabels(topic_names, rotation='vertical')
     ax.legend()
     plt.show()
-
 
 
 # MAIN

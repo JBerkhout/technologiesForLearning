@@ -14,6 +14,7 @@ class neural_network_model:
             print("No model found! Please train a model first")
             self.model = None
 
+
     # Call this function to train a model
     def train(self, training_data, training_labels, test_data, test_labels, batch_size, epochs):
         model = tf.keras.models.Sequential([
@@ -33,6 +34,7 @@ class neural_network_model:
         model.evaluate(test_data, test_labels, verbose=2)
         # Save the model to the models folder so it can be re-used later without need for training
         model.save(self.model_path, overwrite=True)
+
 
     # Call this function to use an existing model to predict a value
     def predict(self, data):

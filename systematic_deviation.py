@@ -1,4 +1,4 @@
-from numpy.core.numeric import NaN
+from typing import Tuple, List
 import pandas as pd
 import numpy as np
 import math
@@ -11,16 +11,17 @@ from variability import compute_variability_statistics, read_topic_variability_s
 
 
 # Returns a tuple with two arrays containing the high/low bias and the std bias for each reviewer respectively
-def compute_systematic_deviation_statistics():
+def compute_systematic_deviation_statistics() -> Tuple[List[float], List[float]]:
     data_dict = pd.read_excel("data_v2.xlsx", None)
 
     grades_list = list_grades_per_reviewer(data_dict)
     high_low = sys_high_low_official()  # sys_high_low(grades_list)
     spread =  sys_spread_official() # sys_spread(grades_list)
     
-    # print(high_low)
-    print(spread)
-    return(high_low, spread)
+    #print(high_low)
+    #print(spread)
+    return high_low, spread
+
 
 # Calculates the systematic deviation for each reviewer. >0 values means positive bias, <0 value means negative bias
 def sys_high_low(grades_list):
@@ -29,18 +30,19 @@ def sys_high_low(grades_list):
     reviewer_means = [] # np.zeros(reviewer_grades.__len__())
     # i = 0
     for reviewer in reviewer_grades:
-        if(not average(reviewer) == None): # Catch bad guy 18 who never handed in any reviews
+        if average(reviewer) is not None: # Catch bad guy 18 who never handed in any reviews
             reviewer_means.append(average(reviewer))
     #    i += 1
 
     # For each reviewer, calculate the difference between their mean and the mean of the other means
-    reviewer_bias = np.zeros(reviewer_means.__len__())
+    reviewer_bias = np.zeros(len(reviewer_means))
     i = 0
-    while i < reviewer_bias.__len__():
+    while i < len(reviewer_bias):
         # Calculate the individual systematic bias
         reviewer_bias[i] = reviewer_means[i] - average(reviewer_means)
         i += 1
-    return(reviewer_bias)
+    return reviewer_bias
+
 
 
 # exactly as sys_high_low, but in different programming style
@@ -103,12 +105,11 @@ def sys_spread(grades_list):
     # Start by calculating the standard deviation per reviewer
     std_per_reviewer = []
     for reviewer in grades_list:
-        if(not reviewer == []): # Catch bad guy 18 who never handed in any reviews
+        if reviewer is not []: # Catch bad guy 18 who never handed in any reviews
             std_per_reviewer.append(np.std(reviewer, ddof=1))
 
-    # print(std_per_reviewer)
-
-    # For each reviewer, calculate the difference between their standard deviation and the mean of the other standard deviations
+    # For each reviewer, calculate the difference between their standard deviation and the mean of the other standard
+    # deviations
     reviewer_range = np.zeros(std_per_reviewer.__len__())
     i = 0
     while i < reviewer_range.__len__():
@@ -116,6 +117,7 @@ def sys_spread(grades_list):
         reviewer_range[i] = std_per_reviewer[i] - average(std_per_reviewer)
         i += 1
     return reviewer_range
+
 
 # with correct formula for sys_dev
 def sys_spread_official(split_topics=False):
@@ -151,15 +153,17 @@ def sys_spread_official(split_topics=False):
     return np.array([np.nanmean(sys_devs) for sys_devs in total_topic_sys_dev])
 
 
-def average(list):
-    len = list.__len__()
-    if(len == 0):
+
+# Does the same as mean(value_list) but separately checks if list is empty
+def average(value_list: [float]) -> None or float:
+    if len(value_list) == 0:
         return None
-    return (sum(list) / len)
+    return sum(value_list) / len(value_list)
+
 
 # Returns an array containing for each reviewer a list with all grades they have given
 # If a reviewer never handed in any grades, nan is put in place instead
-def list_grades_per_reviewer(data_dict):
+def list_grades_per_reviewer(data_dict: pd.DataFrame):
     # Create and initialize array of empty lists to store grades in
     reviewer_grades = np.empty(44, dtype=list)
     i = 0
@@ -179,11 +183,12 @@ def list_grades_per_reviewer(data_dict):
             entry = df[df["User"] == i]
             
             # Safeguard to check if the student graded this presentation. If not, move on to the next student
-            if(entry.empty):
+            if entry.empty:
                 i += 1
                 continue
             
-            # Extract the grades in the form of a list of length 8 contain all grades given by a single user on a single topic
+            # Extract the grades in the form of a list of length 8 contain all grades given by a single user on a
+            # single topic
             grades = []
             j = 0
             for rubric in range(1, 9):
@@ -191,11 +196,13 @@ def list_grades_per_reviewer(data_dict):
                 j += 1
             reviewer_grades[i - 1] += grades
             i += 1
-    # reviewer_grades now contains for each reviewer (index, note that reviewer 1 has index 0) a list of all grades assigned
+    # reviewer_grades now contains for each reviewer (index, note that reviewer 1 has index 0) a list of all grades
+    # assigned
     return reviewer_grades
 
 
-def plot_sys_dev_highlow():
+# Plot systematic deviations
+def plot_sys_dev_highlow() -> None:
     out, _ = compute_systematic_deviation_statistics()
     users = [i for i in range(1, len(out) + 2)]
     bad_user = 18
@@ -207,7 +214,8 @@ def plot_sys_dev_highlow():
     plt.show()
 
 
-def plot_sys_dev_broadnarrow():
+# Plot systematic deviations
+def plot_sys_dev_broadnarrow() -> None:
     _, out = compute_systematic_deviation_statistics()
     users = [i for i in range(1, len(out) + 2)]
     bad_user = 18
