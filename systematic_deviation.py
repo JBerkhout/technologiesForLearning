@@ -2,17 +2,21 @@ from numpy.core.numeric import NaN
 import pandas as pd
 import numpy as np
 import math
+import warnings
 import matplotlib.pyplot as plt
 
+from models import get_reviewer_grade_sets
 from pre_processing import get_short_rubrics_names_dict, get_topics_names_dict
+from variability import compute_variability_statistics, read_topic_variability_statistics
+
 
 # Returns a tuple with two arrays containing the high/low bias and the std bias for each reviewer respectively
 def compute_systematic_deviation_statistics():
     data_dict = pd.read_excel("data_v2.xlsx", None)
 
     grades_list = list_grades_per_reviewer(data_dict)
-    high_low = sys_high_low(grades_list)
-    spread = sys_spread(grades_list)
+    high_low = sys_high_low_official()  # sys_high_low(grades_list)
+    spread =  sys_spread_official() # sys_spread(grades_list)
     
     # print(high_low)
     print(spread)
@@ -38,6 +42,62 @@ def sys_high_low(grades_list):
         i += 1
     return(reviewer_bias)
 
+
+# exactly as sys_high_low, but in different programming style
+def sys_high_low2(grades_list):
+    # Calculate the mean grade assigned by each reviewer
+    reviewers_grades = grades_list # 2D array with for each reviewer all their grades (both topics and rubrics)
+    reviewers_means = []
+
+    for reviewer_grades in reviewers_grades:
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            try:
+                cur_mean = np.nanmean(reviewer_grades)
+            except RuntimeWarning:
+                cur_mean = np.NaN
+        reviewers_means.append(cur_mean)
+
+    # For each reviewer, calculate the difference between their mean and the mean of the means
+    overall_reviewer_mean = np.nanmean(reviewers_means)
+    reviewer_bias = reviewers_means - overall_reviewer_mean
+
+    return reviewer_bias
+
+# with correct formula for sys_dev
+def sys_high_low_official(split_topics=False):
+    reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
+    topics_means_list = read_topic_variability_statistics(False)
+
+    # get reviewers' grades mean for each topic
+    topic_means = np.zeros(len(topics_means_list))
+    for i_topic in range(0, len(topics_means_list)):
+        topic_means[i_topic] = topics_means_list[i_topic]["total_mean"]
+
+    # # calculate reviewers' means for each topic
+    means_topics_reviewers = []
+    for reviewer_grades in reviewer_grade_sets:
+        means_topics = []
+        for topic_grades in reviewer_grades:
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try:
+                    cur_mean = np.nanmean(topic_grades)
+                except RuntimeWarning:
+                    cur_mean = np.NaN
+            means_topics.append(cur_mean)
+        means_topics_reviewers.append(means_topics)
+
+    # calculate mean of the difference between earlier calculated means
+    total_topic_sys_dev = np.zeros(shape=(44, 22))
+    for reviewer_id in range(0, len(means_topics_reviewers)):
+        total_topic_sys_dev[reviewer_id] = means_topics_reviewers[reviewer_id] - topic_means
+
+    if split_topics:
+        return np.array(total_topic_sys_dev)
+    return np.array([np.nanmean(sys_devs) for sys_devs in total_topic_sys_dev])
+
+
 # Calculate the difference in std compared to the average std of the rest of the reviewers
 def sys_spread(grades_list):
     # Start by calculating the standard deviation per reviewer
@@ -56,6 +116,40 @@ def sys_spread(grades_list):
         reviewer_range[i] = std_per_reviewer[i] - average(std_per_reviewer)
         i += 1
     return reviewer_range
+
+# with correct formula for sys_dev
+def sys_spread_official(split_topics=False):
+    reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
+    topics_means_list = read_topic_variability_statistics(False)
+
+    # get reviewers' grades mean std for each topic
+    topic_means = np.zeros(len(topics_means_list))
+    for i_topic in range(0, len(topics_means_list)):
+        topic_means[i_topic] = topics_means_list[i_topic]["mean_std"]
+
+    # # calculate reviewers' means std for each topic
+    means_topics_reviewers = []
+    for reviewer_grades in reviewer_grade_sets:
+        means_topics = []
+        for topic_grades in reviewer_grades:
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try:
+                    cur_mean = np.nanstd(topic_grades)
+                except RuntimeWarning:
+                    cur_mean = np.NaN
+            means_topics.append(cur_mean)
+        means_topics_reviewers.append(means_topics)
+
+    # calculate mean of the difference between earlier calculated means
+    total_topic_sys_dev = np.zeros(shape=(44, 22))
+    for reviewer_id in range(0, len(means_topics_reviewers)):
+        total_topic_sys_dev[reviewer_id] = means_topics_reviewers[reviewer_id] - topic_means
+
+    if split_topics:
+        return np.array(total_topic_sys_dev)
+    return np.array([np.nanmean(sys_devs) for sys_devs in total_topic_sys_dev])
+
 
 def average(list):
     len = list.__len__()
