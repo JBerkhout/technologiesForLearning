@@ -229,6 +229,7 @@ def are_there_duplicate_reviews(data_dict: pd.DataFrame) -> bool:
             return True
     return False
 
+
 # Returns a dict with keys being the students and values an array with all topics they reviewed.
 def get_review_amount_list(data_dict: pd.DataFrame) -> Dict[int, List[int]]:
     review_amounts_dict = {}
@@ -247,7 +248,7 @@ def get_review_amount_list(data_dict: pd.DataFrame) -> Dict[int, List[int]]:
 
 # Returns the true grades as given by the teacher.
 # Returns an array of lists, where each list contains the grades given on the eight rubrics.
-def get_true_grade_sets(input_path: str) -> [List[float]]:
+def get_true_grade_sets(input_path: str) -> List[List[float]]:
     # Need to include pre-processing before here!!
     data_dict = pd.read_excel(input_path, None)
     df = data_dict['true_grades']
