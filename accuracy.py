@@ -32,7 +32,6 @@ def get_accuracy(input_path: str, split_topics=False) -> [float]:
                     # Loop over all rubrics
                     h += 1
                     continue
-                # TODO: The next part calculates the accuracy in a very simple way, might need to update this later
                 total_grades_difference[h] = np.abs(true_grade_sets[j][h] - reviewer_grade_sets[i][j][h])
                 total_grades_counted += 1
                 h += 1
