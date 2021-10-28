@@ -34,6 +34,18 @@ def get_topic_presenters_dict() -> Dict[int, List[int]]:
     return topic_presenters_dict
 
 
+# Returns an dictionary with the keys being themes and values a string with the theme name.
+def get_theme_names_dict() -> Dict[int, str]:
+    theme_names_dict = {
+        1: "1 Student Modelling",
+        2: "2 Assessment",
+        3: "3 Adaptation",
+        4: "4 Intelligent Tutoring Systems",
+        5: "5 Big Educational Data",
+    }
+    return theme_names_dict
+
+
 # Returns an dictionary with the keys being topics and values a string with the topic name.
 def get_topics_names_dict() -> Dict[int, str]:
     topics_names_dict = {
