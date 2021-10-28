@@ -5,8 +5,7 @@ import math
 import warnings
 import matplotlib.pyplot as plt
 
-from models import get_reviewer_grade_sets
-from pre_processing import get_short_rubrics_names_dict, get_topics_names_dict
+from accuracy import get_reviewer_grade_sets
 from variability import compute_variability_statistics, read_topic_variability_statistics
 
 
