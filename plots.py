@@ -6,7 +6,7 @@ import numpy as np
 from pre_processing import get_topics_names_dict, get_theme_names_dict
 
 from accuracy import get_accuracy, accuracy_per_topic
-from systematic_deviation import sys_high_low_official, sys_spread_official
+from systematic_deviation import sys_high_low_official, sys_spread_official, sys_dev_ordering
 from variability import read_topic_variability_statistics
 
 INPUT_PATH = "data_v2.xlsx"
@@ -20,6 +20,7 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 
 
 def plot_per_reviewer(metric):
+    y_label = metric.capitalize()
     if metric == "inaccuracy":
         out = get_accuracy(INPUT_PATH)
     elif metric == "validity":
@@ -33,8 +34,8 @@ def plot_per_reviewer(metric):
     elif metric == "systematic broad/narrow peer bias":
         out = sys_spread_official()
     elif metric == "systematic problems in ordering":
-        print("Metrics " + metric + " has not been implemented yet...")
-        return
+        out = sys_dev_ordering()
+        y_label = "Rank correlation"  # atm with average ordering
     else:
         print("Metrics " + metric + " was not recognized...")
         return
@@ -46,7 +47,7 @@ def plot_per_reviewer(metric):
     plt.bar(users, out)  # , color=COLOR)
     plt.title('Bar plot of ' + metric + ' for each peer reviewer')
     plt.xlabel('ID of peer reviewer')
-    plt.ylabel(metric.capitalize())
+    plt.ylabel(y_label)
     plt.grid()
     plt.show()
 

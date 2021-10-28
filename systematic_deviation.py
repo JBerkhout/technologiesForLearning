@@ -4,6 +4,7 @@ import numpy as np
 import math
 import warnings
 import matplotlib.pyplot as plt
+from scipy.stats import spearmanr
 
 from accuracy import get_reviewer_grade_sets
 from variability import compute_variability_statistics, read_topic_variability_statistics
@@ -43,7 +44,6 @@ def sys_high_low(grades_list):
     return reviewer_bias
 
 
-
 # exactly as sys_high_low, but in different programming style
 def sys_high_low2(grades_list):
     # Calculate the mean grade assigned by each reviewer
@@ -64,6 +64,7 @@ def sys_high_low2(grades_list):
     reviewer_bias = reviewers_means - overall_reviewer_mean
 
     return reviewer_bias
+
 
 # with correct formula for sys_dev
 def sys_high_low_official(split_topics=False):
@@ -97,6 +98,46 @@ def sys_high_low_official(split_topics=False):
     if split_topics:
         return np.array(total_topic_sys_dev)
     return np.array([np.nanmean(sys_devs) for sys_devs in total_topic_sys_dev])
+
+
+def sys_dev_ordering(split_topics=False):
+    reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
+    topics_means_list = read_topic_variability_statistics(False)
+
+    # get reviewers' grades mean for each topic
+    topic_means = np.zeros(len(topics_means_list))
+    for i_topic in range(0, len(topics_means_list)):
+        topic_means[i_topic] = topics_means_list[i_topic]["total_mean"]
+
+    # # calculate reviewers' means for each topic
+    means_topics_reviewers = []
+    for reviewer_grades in reviewer_grade_sets:
+        means_topics = []
+        for topic_grades in reviewer_grades:
+            with warnings.catch_warnings():
+                warnings.filterwarnings('error')
+                try:
+                    cur_mean = np.nanmean(topic_grades)
+                except RuntimeWarning:
+                    cur_mean = np.NaN
+            means_topics.append(cur_mean)
+        means_topics_reviewers.append(means_topics)
+
+    # calculate ranking of topics
+    avg_topic_ordering = np.argsort(topic_means)
+    reviewers_topic_ordering = []
+    for reviewer_means in means_topics_reviewers:
+        reviewers_topic_ordering.append(np.argsort(reviewer_means))
+
+    # calculate correlation between each reviewer's and average ranking of topics
+    total_sys_dev = np.zeros(shape=44)
+    for reviewer_id in range(0, len(reviewers_topic_ordering)):
+        total_sys_dev[reviewer_id], p = spearmanr(reviewers_topic_ordering[reviewer_id], avg_topic_ordering)  # to add spearmank rank correlation, etc
+
+    if split_topics:
+        print("Split topics has not been implemented yet for this metric")
+        return
+    return total_sys_dev
 
 
 # Calculate the difference in std compared to the average std of the rest of the reviewers
