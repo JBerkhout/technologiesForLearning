@@ -237,11 +237,11 @@ def get_review_amount_list(data_dict: pd.DataFrame) -> Dict[int, List[int]]:
     for student in range(1, 45):
         review_amounts_dict[student] = []
 
-    for topic in range(1, 22):
+    for topic in range(1, 23):
         tab_name = 'topic' + str(topic)
         df = data_dict[tab_name]
-        for student in range(1, 44):
-            if student in df['User']:
+        for student in range(1, 45):
+            if student in df.loc[:, 'User'].values:
                 review_amounts_dict[student].append(topic)
     return review_amounts_dict
 
