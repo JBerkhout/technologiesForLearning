@@ -12,6 +12,12 @@ from pre_processing import get_true_grade_sets, get_review_amount_list
 # Will be in range [-1, 1] with 0 being no correlation at all.
 
 
+def pearson_per_student_formatted():
+    pearson_p_values = list(compute_pearson_per_student().values())
+    pearson_values = np.array(list(zip(*pearson_p_values))[0])
+    return pearson_values
+
+
 # Compute the pearson correlation coefficient per student, and adds (Nan, Nan) to tuple if student did not write reviews
 def compute_pearson_per_student() -> Dict[int, Tuple[float, float]]:
     data_dict = pd.read_excel("data_v2.xlsx", None)
