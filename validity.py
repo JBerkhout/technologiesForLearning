@@ -19,6 +19,20 @@ def pearson_per_student_formatted():
     return pearson_values
 
 
+# Returns a list of the amount of reviews that are written for each topic.
+def amount_of_reviews() -> List[int]:
+    data_dict = pd.read_excel("data_v2.xlsx", None)
+
+    review_amount_per_topic = []
+    for topic in range(1, 23):
+        tab_name = 'topic' + str(topic)
+        df = data_dict[tab_name]
+        review_amount = len(df["User"].tolist())
+        review_amount_per_topic.append(review_amount)
+    return review_amount_per_topic
+
+
+
 # Compute the pearson correlation coefficient per student, and adds (Nan, Nan) to tuple if student did not write reviews
 def compute_pearson_per_student() -> Dict[int, Tuple[float, float]]:
     data_dict = pd.read_excel("data_v2.xlsx", None)
@@ -56,64 +70,35 @@ def compute_pearson_per_student() -> Dict[int, Tuple[float, float]]:
     return output
 
 
-def amount_of_reviews():
-    data_dict = pd.read_excel("data_v2.xlsx", None)
-
-    review_amount_per_topic = []
-    for topic in range(1, 23):
-        tab_name = 'topic' + str(topic)
-        df = data_dict[tab_name]
-        review_amount = len(df["User"].tolist())
-        review_amount_per_topic.append(review_amount)
-    return review_amount_per_topic
-
 
 # Compute the pearson correlation coefficient per student, and adds (Nan, Nan) to tuple if student did not write reviews
-def compute_pearson_per_rubric():
+def compute_pearson_per_rubric() -> Dict[int, Tuple[float, float]]:
     data_dict = pd.read_excel("data_v2.xlsx", None)
     output = {}
-    teacher_grades_per_topic = get_true_grade_sets("data_v2.xlsx")
     review_amounts = amount_of_reviews()
-
-    total_teacher_array = np.array([])
-    for grade in range(0, 22):
-        temp_teacher_arr = np.array([])
-        for review in range(1, review_amounts[grade]):
-            np.append(temp_teacher_arr, review)
-    print(total_teacher_array)
-    print(temp_teacher_arr)
-    total_teacher_array = np.concatenate(total_teacher_array, temp_teacher_arr)
-    print(total_teacher_array)
-
-
+    df = data_dict['true_grades']
 
     for rubric in range(1, 9):
-        df = data_dict['true_grades']
+        total_teacher_array = np.array([])
         rubric_string = "R" + str(rubric)
-        teacher_grades = df[rubric_string].tolist()
-        #teacher_grades = [value for value in teacher_grades if not math.isnan(value)]
-        print(teacher_grades)
+        rubric_string_student = "Grade" + str(rubric)
+        grades_for_rubric = df[rubric_string].tolist()
+        total_student_array = np.array([])
 
-        total_teacher_grades = np.array([])
-        total_student_grades = np.array([])
-        for topic in range(1, 23):
-            tab_name = 'topic' + str(topic)
-            df = data_dict[tab_name]
+        for grade_index in range(1, 23):
+            grade = grades_for_rubric[grade_index - 1]
+            temp_teacher_arr = [grade] * review_amounts[grade_index -1]
+            total_teacher_array = np.concatenate((total_teacher_array, np.array(temp_teacher_arr)))
 
-            total_teacher_grades = np.concatenate((total_teacher_grades, teacher_grades))
+            dataframe = data_dict["topic" + str(grade_index)]
+            student_rubric_list = dataframe[rubric_string_student].tolist()
+            total_student_array = np.concatenate((total_student_array, np.array(student_rubric_list)))
 
-            student_grades_per_topic = np.array([])
-            rubric_grades = df["Grade" + str(rubric)].tolist()
-            for student_grade in rubric_grades:
-                student_grades_per_topic.append(rubric_grades[student_grade])
-            print(student_grades_per_topic)
-            total_student_grades = np.concatenate((total_student_grades, student_grades_per_topic))
-
-        correlation = np.array(scipy.stats.pearsonr(total_teacher_grades, total_student_grades))
+        correlation = np.array(scipy.stats.pearsonr(total_teacher_array, total_student_array))
         output[rubric] = correlation
 
-    print(output)
     return output
+
 
 # Compute the validity using the Pearson correlation for each reviewer. Returns a dict with keys being the topic and
 # the value being a tuple with the correlation value and the two tailed p value.
@@ -140,6 +125,10 @@ def compute_pearson_per_topic() -> Dict[int, Tuple[float, float]]:
 
             correlations_per_topic = np.concatenate((correlations_per_topic, review_array))
             if topic == 13 or topic == 18:
+                # This might seem odd: but the pearson implementation belong does not work if one of the arrays only
+                # has the same value in it. This is the case for topics 13 and 18, for which the teacher gave the
+                # same grades on all the rubrics. This is why we need to subtract and very small number from the first
+                # value of the array to make the pearson computation not just return nan.
                 teacher_array_total[0] = teacher_array_total[0] - 0.0001
 
         correlation = np.array(scipy.stats.pearsonr(correlations_per_topic, teacher_array_total))
@@ -155,7 +144,6 @@ def plot_topic_validity() -> None:
     topic_correlation_values = np.array([])
     for topic in range(1, 23):
         topic_correlation_values = np.concatenate((topic_correlation_values, np.array([data[topic][0]])))
-
 
     topics = [i for i in range(1, 22 + 1)]  # 22 = nr of topics, not dynamic yet...
     x_pos = np.arange(len(topics))
@@ -195,7 +183,26 @@ def plot_student_validity() -> None:
     plt.ylabel('Pearson Correlation Coefficient')
     plt.show()
 
+
+# Plot a bar graph with the validity per topic
+def plot_rubric_validity() -> None:
+    data = compute_pearson_per_rubric()
+
+    rubric_correlation_values = np.array([])
+    for rubric in range(1, 9):
+        rubric_correlation_values = np.concatenate((rubric_correlation_values, np.array([data[rubric][0]])))
+
+    topics = [i for i in range(1, 8 + 1)]  # 22 = nr of topics, not dynamic yet...
+    x_pos = np.arange(len(topics))
+
+    plt.bar(topics, rubric_correlation_values)
+    plt.title('Bar plot of validity measured with the Pearson Correlation Coefficient')
+    plt.xlabel('Rubric')
+    plt.xticks(x_pos + 1, topics)
+    plt.ylabel('Pearson Correlation Coefficient')
+    plt.show()
+
 # MAIN
-#plot_topic_validity()
-#plot_student_validity()
-#compute_pearson_per_rubric()
+# plot_topic_validity()
+# plot_student_validity()
+plot_rubric_validity()
