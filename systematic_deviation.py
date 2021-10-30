@@ -103,6 +103,8 @@ def sys_high_low_official(split_topics=False):
 def sys_dev_ordering(split_topics=False):
     reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
     topics_means_list = read_topic_variability_statistics(False)
+    if split_topics:
+        return sys_dev_ordering_topics(reviewer_grade_sets)
 
     # get reviewers' grades mean for each topic
     topic_means = np.zeros(len(topics_means_list))
@@ -132,12 +134,27 @@ def sys_dev_ordering(split_topics=False):
     # calculate correlation between each reviewer's and average ranking of topics
     total_sys_dev = np.zeros(shape=44)
     for reviewer_id in range(0, len(reviewers_topic_ordering)):
-        total_sys_dev[reviewer_id], p = spearmanr(reviewers_topic_ordering[reviewer_id], avg_topic_ordering)  # to add spearmank rank correlation, etc
+        total_sys_dev[reviewer_id], p = spearmanr(reviewers_topic_ordering[reviewer_id], avg_topic_ordering)
 
-    if split_topics:
-        print("Split topics has not been implemented yet for this metric")
-        return
     return total_sys_dev
+
+
+def sys_dev_ordering_topics(reviewer_grade_sets):
+    # calculate correlation between each reviewer's and average ranking of topics
+    total_topic_sys_dev = np.zeros(shape=(reviewer_grade_sets.shape[0], reviewer_grade_sets.shape[1]))
+    for topic_id in range(0, reviewer_grade_sets.shape[1]):
+        # calculate average ranking within topics
+        rubric_means = np.zeros(reviewer_grade_sets.shape[2])
+        for rubric_id in range(0, reviewer_grade_sets.shape[2]):
+            rubric_means[rubric_id] = np.nanmean(reviewer_grade_sets[:, topic_id, rubric_id])
+        avg_topic_ordering = np.argsort(rubric_means)
+
+        # calculate correlation between each reviewer's and average ranking of topics
+        for reviewer_id in range(0, reviewer_grade_sets.shape[0]):
+            reviewers_topic_ordering = np.argsort(reviewer_grade_sets[reviewer_id][topic_id])
+            total_topic_sys_dev[reviewer_id][topic_id], p = spearmanr(reviewers_topic_ordering, avg_topic_ordering)
+
+    return total_topic_sys_dev
 
 
 # Calculate the difference in std compared to the average std of the rest of the reviewers
