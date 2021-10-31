@@ -225,7 +225,7 @@ def sys_spread_official(split_topics=False):
 
 
 # Does the same as mean(value_list) but separately checks if list is empty
-def average(value_list: [float]) -> None or float:
+def average(value_list: List[float]) -> None or float:
     if len(value_list) == 0:
         return None
     return sum(value_list) / len(value_list)
