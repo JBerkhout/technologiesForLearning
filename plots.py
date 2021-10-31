@@ -140,11 +140,6 @@ def plot_correlation_metrics_with_acc():
         p_values.append(p)
 
     metrics_labels = (np.array([[metric.capitalize(), "Absolute " + metric] for metric in metrics])).flatten()
-
-    print(metrics_labels)
-    print(corr)
-    print(p_values)
-
     bars = plt.bar(metrics_labels, out)  # , color=COLOR)
     for bar_id in range(len(bars)):
         plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005, "p-value: " + "{:.2e}".format(p_values[bar_id]))

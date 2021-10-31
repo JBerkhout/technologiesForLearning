@@ -97,7 +97,14 @@ def sys_high_low_official(split_topics=False):
 
     if split_topics:
         return np.array(total_topic_sys_dev)
-    return np.array([np.nanmean(sys_devs) for sys_devs in total_topic_sys_dev])
+
+    reviewer_sys_dev = np.zeros(shape=len(total_topic_sys_dev))
+    for i in range(len(total_topic_sys_dev)):
+        if np.isnan(total_topic_sys_dev[i]).all():
+            reviewer_sys_dev[i] = np.nan
+        else:
+            reviewer_sys_dev[i] = np.nanmean(total_topic_sys_dev[i])
+    return reviewer_sys_dev
 
 
 def sys_dev_ordering(split_topics=False):
@@ -207,8 +214,14 @@ def sys_spread_official(split_topics=False):
 
     if split_topics:
         return np.array(total_topic_sys_dev)
-    return np.array([np.nanmean(sys_devs) for sys_devs in total_topic_sys_dev])
 
+    reviewer_sys_dev = np.zeros(shape=len(total_topic_sys_dev))
+    for i in range(len(total_topic_sys_dev)):
+        if np.isnan(total_topic_sys_dev[i]).all():
+            reviewer_sys_dev[i] = np.nan
+        else:
+            reviewer_sys_dev[i] = np.nanmean(total_topic_sys_dev[i])
+    return reviewer_sys_dev
 
 
 # Does the same as mean(value_list) but separately checks if list is empty

@@ -47,7 +47,10 @@ def get_accuracy(input_path: str, split_topics=False) -> [float]:
             total_grades_counted = 0
             j += 1
 
-        total_accuracy[i] = np.nanmean(total_topic_accuracy[i])
+        if np.isnan(total_topic_accuracy[i]).all():
+            total_accuracy[i] = np.nan
+        else:
+            total_accuracy[i] = np.nanmean(total_topic_accuracy[i])
         i += 1
 
     if split_topics:
