@@ -100,6 +100,50 @@ def compute_pearson_per_rubric() -> Dict[int, Tuple[float, float]]:
     return output
 
 
+# could not make use of compute_pearson_per_topic directly, but makes much use of that code
+def pearson_per_topic_formatted(with_p=False):
+    data_dict = pd.read_excel("data_v2.xlsx", None)
+    output = np.zeros(shape=(44, 22, 2))
+    teacher_grades_per_topic = get_true_grade_sets("data_v2.xlsx")
+
+    for reviewer in range(1, 45):
+        for topic in range(1, 23):
+            tab_name = 'topic' + str(topic)
+            df = data_dict[tab_name]
+            student_row = df.loc[df['User'] == reviewer]
+            teacher_array = teacher_grades_per_topic[topic - 1]
+
+            # If the student did not write any reviews, the correlation is Nan with p value Nan
+            if len(student_row) == 0:
+                output[reviewer-1][topic-1][0] = np.nan
+                output[reviewer-1][topic-1][1] = np.nan
+                continue
+
+            review_array = np.zeros(shape=8)
+            for rubric in range(1, 9):
+                reviewer_grade = student_row['Grade' + str(rubric)]
+                if len(reviewer_grade) != 1:
+                    review_array[rubric-1] = np.nan
+                else:
+                    review_array[rubric-1] = reviewer_grade
+
+            # This might seem odd: but the pearson implementation belong does not work if one of the arrays only
+            # has the same value in it. This is why we need to subtract and very small number from the first
+            # value of the array to make the pearson computation not just return nan.
+            if np.nanstd(teacher_array) == 0:
+                teacher_array[0] = teacher_array[0] - 0.0001
+            if np.nanstd(review_array) == 0:
+                review_array[0] = review_array[0] - 0.0001
+
+            pearson, p = scipy.stats.pearsonr(review_array, teacher_array)
+            output[reviewer-1, topic-1, 0] = pearson
+            output[reviewer-1, topic-1, 1] = p
+
+    if not with_p:
+        return output[:, :, 0]
+    return output
+
+
 # Compute the validity using the Pearson correlation for each reviewer. Returns a dict with keys being the topic and
 # the value being a tuple with the correlation value and the two tailed p value.
 def compute_pearson_per_topic() -> Dict[int, Tuple[float, float]]:
