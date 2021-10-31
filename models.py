@@ -9,6 +9,9 @@ import variability
 from accuracy import get_accuracy
 from validity import pearson_per_student_formatted
 from systematic_deviation import compute_systematic_deviation_statistics, sys_dev_ordering
+import neural_network as nn
+import tensorflow as tf
+import keras
 
 # Use: python models.py -t rule -m simple -i data_v2.xlsx
 # to run the NN
@@ -30,7 +33,7 @@ def main(args):
         elif (name == "accuracy"):
             acc = get_accuracy(args.input)
             normalized_acc = normalize(acc, 0, 3, 1)
-            print(np.sort(normalized_acc))
+            print(normalized_acc)
 
         elif (name == "validity"):
             # Solo: validity
@@ -108,37 +111,77 @@ def main(args):
             # Run model named "test"
             print("Not implemented yet")
 
+        elif (name == "accuracy"):
+            acc = get_accuracy(args.input)
+            normalized_acc = [normalize(acc, 0, 3, 1)]
+            print(normalized_acc)
+
         elif (name == "validity"):
             # Solo: validity
-            print()
+            pear = pearson_per_student_formatted()
+            # Pearsons scales from -1 to +1, where higher is better. 
+            normalized_pear = [normalize(pear, -1, 1, 0.2)]
+            nn_model(normalized_pear)
 
         elif (name == "reliability"):
             # Solo: reliability
-            print()
+            print("Not implemented")
             
         elif (name == "sys_dev_high"):
             # Solo: systematic deviation: high/low
-            print()
+            sys_dev = compute_systematic_deviation_statistics()[0]
+            normalized_dev = [normalize(sys_dev, -2, 2, 0.5)]
+            nn_model(normalized_dev)
         
         elif (name == "sys_dev_wide"):
             # Solo: systematic deviation: broad/narrow
-            print()
+            sys_dev = compute_systematic_deviation_statistics()[1]
+            normalized_dev = [normalize(sys_dev, -1, 1, .8)]
+            nn_model(normalized_dev)
             
         elif (name == "sys_dev_order"):
             # Solo: systematic deviation: relative ordering
-            print()
+            sys_dev = compute_systematic_deviation_statistics()[1]
+            normalized_dev = [normalize(sys_dev, -1, 1, .8)]
+            nn_model(normalized_dev)
         
         elif (name == "sys_dev_full"):
             # Combined: all systematic deviation metrics
-            print()
+            sys_dev_high = compute_systematic_deviation_statistics()[0]
+            normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
+            sys_dev_wide = compute_systematic_deviation_statistics()[1]
+            normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
+            sys_dev_ord = compute_systematic_deviation_statistics()[1]
+            normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
+
+            total_dev = [normalized_high, normalized_dev_wide, normalized_dev_ord]
+            nn_model(total_dev)
         
         elif (name == "val_rel"):
             # Combined: validity and reliability
-            print()
+            pear = pearson_per_student_formatted()
+            normalized_pear = normalize(pear, -1, 1, 0.2)
+            rel = pearson_per_student_formatted() # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
+            normalized_rel = normalize(rel, -1, 1, 0.2) 
+
+            total = [normalized_pear, normalized_rel]
+            nn_model(total)
         
         elif (name == "all"):
             # Combined: # of reviews handed in, length of comments and consistency (variability of grades of a single student)
-            print()
+            pear = pearson_per_student_formatted()
+            normalized_pear = normalize(pear, -1, 1, 0.2)
+            rel = pearson_per_student_formatted() # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
+            normalized_rel = normalize(rel, -1, 1, 0.2) 
+            sys_dev_high = compute_systematic_deviation_statistics()[0]
+            normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
+            sys_dev_wide = compute_systematic_deviation_statistics()[1]
+            normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
+            sys_dev_ord = compute_systematic_deviation_statistics()[1]
+            normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
+            
+            total = [normalized_pear, normalized_rel, normalized_high, normalized_dev_wide, normalized_dev_ord]
+            nn_model(total)
             
         else:
             print("Model name not found")
@@ -181,28 +224,43 @@ def r_simple_model(input_path: str):
 
 
 # Simple neural network model, accuracy as labels, variability and grades(?) as input
-def nn_variability_model(input_path: str):
-    # Input: 
-    # - Variability statistics
-    # - All grades?
-    # Labels: Accuracy?
-    var_dict = variability.compute_variability_statistics()
-    print(var_dict)
-    # TODO: process input data
-    training_data = 0
-    training_labels = 0
+def nn_model(input_data):
+    data = np.zeros([44, input_data.__len__()])
+    i = 0
+    while (i < input_data.__len__()):
+        j = 0
+        while (j < 44):
+            # Ugly fix for that annoying reviewer 18
+            if(j == 17):
+                data[j, i] = input_data[i][j-2]
+            else:
+                data[j, i] = input_data[i][j]
+            j += 1
+        i += 1
 
-    test_data = 0
-    test_labels = 0
+    acc = get_accuracy(args.input)
+    labels = np.transpose([normalize(acc, 0, 3, 1)])
+    
+    training_count = int(44 * 0.8)
 
-    data = 0
+    training_data = data[:training_count]
+    training_labels = labels[:training_count]
+
+    testing_data = data[training_count:]
+    testing_labels = labels[training_count:]
+
+    # training_data = tf.data.Dataset.from_tensor_slices((data[:training_count],labels[:training_count])) 
+    # testing_data = tf.data.Dataset.from_tensor_slices((data[training_count:],labels[training_count:])) 
+
+# Data you want to predict a reviewer grade for
+    data = [8]
 
 # DISABLE IF YOU GET ERROR: CORE DUMPED
-    #model = neural_network_model(args.model, 4)
-    #model.train(training_data, training_labels, test_data, test_labels, 64, 8)
-    #predicted_grade = model.predict(data)
+    network = nn.neural_network_model(args.modelname, input_data.__len__())
+    network.train(training_data, training_labels, testing_data, testing_labels, 1, 1)
+    predicted_grade = network.predict_grade(data)
 
-    #print(predicted_grade)
+    print(predicted_grade)
 
 ##############
 ##############

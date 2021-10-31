@@ -16,7 +16,7 @@ class neural_network_model:
 
 
     # Call this function to train a model
-    def train(self, training_data, training_labels, test_data, test_labels, batch_size, epochs):
+    def train(self, training_data, training_labels, test_data, testing_labels, batch_size, epochs):
         model = tf.keras.models.Sequential([
             tf.keras.layers.InputLayer(input_shape = self.metric_count),
             tf.keras.layers.Dense(self.metric_count * 10, activation='relu'),
@@ -26,18 +26,19 @@ class neural_network_model:
             tf.keras.layers.Dense(1, activation='relu')
         ])
 
-        model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.1, momentum=0.9),
+        model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.5, momentum=0.9),
                       loss='mean_squared_error',
                       metrics=['accuracy'])
 
         model.fit(training_data, training_labels, batch_size, epochs)
-        model.evaluate(test_data, test_labels, verbose=2)
+        model.evaluate(test_data, testing_labels, verbose=2)
         # Save the model to the models folder so it can be re-used later without need for training
         model.save(self.model_path, overwrite=True)
 
 
     # Call this function to use an existing model to predict a value
-    def predict(self, data):
+    def predict_grade(self, data):
+        self.model = tf.keras.models.load_model(self.model_path)
         # Check if the model has been loaded properly
         if(self.model == None):
             print("Warning: This model has not yet been trained. Please train the model first.")
