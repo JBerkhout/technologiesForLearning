@@ -130,16 +130,27 @@ def plot_correlation_metrics_with_acc():
 
         single_2d_arr = np.vstack([values, acc])
         without_nan = single_2d_arr[:, ~np.any(np.isnan(single_2d_arr), axis=0)]
+
         corr, p = pearsonr(without_nan[0], without_nan[1])
         out.append(np.abs(corr))
         p_values.append(p)
 
-    bars = plt.bar([metric.capitalize() for metric in metrics], out)  # , color=COLOR)
+        corr, p = pearsonr(np.abs(without_nan[0]), without_nan[1])
+        out.append(np.abs(corr))
+        p_values.append(p)
+
+    metrics_labels = (np.array([[metric.capitalize(), "Absolute " + metric] for metric in metrics])).flatten()
+
+    print(metrics_labels)
+    print(corr)
+    print(p_values)
+
+    bars = plt.bar(metrics_labels, out)  # , color=COLOR)
     for bar_id in range(len(bars)):
         plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005, "p-value: " + "{:.2e}".format(p_values[bar_id]))
-    plt.title('Bar plot of correlation with accuracy for each metric per reviewer')
+    plt.title('Bar plot of absolute correlation with accuracy for each metric per reviewer')
     plt.xlabel('Metric')
     plt.xticks(rotation=90)
-    plt.ylabel('(Absolute) correlation')
+    plt.ylabel('Absolute correlation')
     plt.grid()
     plt.show()
