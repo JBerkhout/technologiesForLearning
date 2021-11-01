@@ -17,7 +17,7 @@ NR_TOPICS = 22
 NR_TOPICS_PER_THEME = (6, 3, 4, 3, 6)
 
 # change colors and run the line below to change the colors used in the plot
-COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'purple', 'pink', 'brown', 'orange', 'teal', 'coral', 'lightblue', 'lime', 'lavender', 'turquoise', 'darkgreen', 'tan', 'salmon', 'gold']
+COLORS = ['#ff1969', '#ffbd59', '#00c2cb', '#3788d4', '#044aad', '#000000']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 
 
