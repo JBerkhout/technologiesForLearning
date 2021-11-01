@@ -118,7 +118,7 @@ def main(args):
     elif(args.modeltype == "nn"):
         if (name == "generator"):
             # Run model named "generator"
-            gen.generate_data(65535)
+            gen.generate_data(1024)
             print("Test data successfully generated and can be found in data_generated.xls")
 
         elif (name == "accuracy"):
