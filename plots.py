@@ -10,6 +10,7 @@ from accuracy import get_accuracy, accuracy_per_topic
 from systematic_deviation import sys_high_low_official, sys_spread_official, sys_dev_ordering
 from validity import pearson_per_student_formatted
 from variability import read_topic_variability_statistics
+from reliability import compute_student_reliability
 
 INPUT_PATH = "data_v2.xlsx"
 NR_REVIEWERS = 44
@@ -28,8 +29,7 @@ def plot_per_reviewer(metric):
     elif metric == "validity":
         out = pearson_per_student_formatted()
     elif metric == "reliability":
-        print("Metrics " + metric + " has not been implemented yet...")
-        return
+        out = compute_student_reliability()
     elif metric == "systematic high/low peer bias":
         out = sys_high_low_official()
     elif metric == "systematic broad/narrow peer bias":
@@ -105,9 +105,8 @@ def plot_per_topic(metric, with_names=True, grouped="not"):
 
 
 def plot_correlation_metrics_with_acc():
-    # reliability not yet added, because not yet implemented
     # (in)accuracy used for 'true' grades for quality
-    metrics = ["validity", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
+    metrics = ["validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
     acc = get_accuracy(INPUT_PATH)
 
     out = []
@@ -116,8 +115,7 @@ def plot_correlation_metrics_with_acc():
         if metric == "validity":
             values = pearson_per_student_formatted()
         elif metric == "reliability":
-            print("Metrics " + metric + " has not been implemented yet...")
-            return
+            values = compute_student_reliability()
         elif metric == "systematic high/low peer bias":
             values = sys_high_low_official()
         elif metric == "systematic broad/narrow peer bias":

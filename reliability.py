@@ -2,12 +2,13 @@ from typing import List, Dict
 
 import pandas as pd
 import numpy as np
+from numpy import ndarray
 
 from pre_processing import get_short_rubrics_names_dict, get_topics_names_dict, get_review_amount_list
 
 
 # Compute the reliability for each student (being the std of all grades given by a student)
-def compute_student_reliability() -> List[Dict[str, float]]:
+def compute_student_reliability() -> ndarray:
     data_dict = pd.read_excel("data_v2.xlsx", None)
     result_output = []
     reviews_per_student = get_review_amount_list(data_dict)
@@ -25,13 +26,10 @@ def compute_student_reliability() -> List[Dict[str, float]]:
                 grade = student_row[column_name]
                 total_student_array.append(grade)
 
-
         std = np.std(total_student_array)
         result_output.append(std)
 
     return np.array(result_output)
-
-
 
 # MAIN
 # compute_student_reliability()
