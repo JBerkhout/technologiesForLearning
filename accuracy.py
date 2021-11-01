@@ -1,3 +1,4 @@
+from typing import List
 import config
 from scipy.stats import trim_mean
 import math
@@ -9,7 +10,7 @@ from pre_processing import get_reviewer_grade_sets, get_true_grade_sets
 # Takes two arguments: array of reviewer grades per presentation
 # And an array of true trades
 # Returns an array with a simple accuracy measure
-def get_accuracy(input_path: str, split_topics=False) -> [float]:
+def get_accuracy(input_path: str, split_topics=False) -> List[float]:
     reviewer_grade_sets = get_reviewer_grade_sets(
         input_path)  # currently NUMPY array with shape(nr_reviewers, nr_topics, nr_rubrics)
     true_grade_sets = get_true_grade_sets(input_path)

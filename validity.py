@@ -14,15 +14,15 @@ from pre_processing import get_true_grade_sets, get_review_amount_list
 # Will be in range [-1, 1] with 0 being no correlation at all.
 
 
-def pearson_per_student_formatted():
-    pearson_p_values = list(compute_pearson_per_student().values())
+def pearson_per_student_formatted(input_path):
+    pearson_p_values = list(compute_pearson_per_student(input_path).values())
     pearson_values = np.array(list(zip(*pearson_p_values))[0])
     return pearson_values
 
 
 # Returns a list of the amount of reviews that are written for each topic.
-def amount_of_reviews() -> List[int]:
-    data_dict = pd.read_excel("data_v2.xlsx", None)
+def amount_of_reviews(input_path) -> List[int]:
+    data_dict = pd.read_excel(input_path, None)
 
     review_amount_per_topic = []
     for topic in range(1, 23):
@@ -35,20 +35,20 @@ def amount_of_reviews() -> List[int]:
 
 
 # Compute the pearson correlation coefficient per student, and adds (Nan, Nan) to tuple if student did not write reviews
-def compute_pearson_per_student() -> Dict[int, Tuple[float, float]]:
-    data_dict = pd.read_excel("data_v2.xlsx", None)
+def compute_pearson_per_student(input_path) -> Dict[int, Tuple[float, float]]:
+    data_dict = pd.read_excel(input_path, None)
     output = {}
     teacher_grades_per_topic = get_true_grade_sets("data_v2.xlsx")
-    reviews_per_student = get_review_amount_list(data_dict)
+    reviews_per_student = get_review_amount_list(data_dict, data_dict["topic1"].__len__())
 
-    for student in range(1, config.r_count+1):
+    for student in range(1, data_dict["topic1"].__len__()+1):
         teacher_array_total = np.array([])
         correlations_per_student = np.array([])
         review_array = np.array([])
 
         # If the student did not write any reviews, the correlation is Nan with p value Nan
         # This is only the case for student 18.
-        if not reviews_per_student[student]:
+        if (not reviews_per_student[student]):
             correlation = np.array((np.NaN, np.NaN))
         else:
             for topic in reviews_per_student[student]:
@@ -64,19 +64,21 @@ def compute_pearson_per_student() -> Dict[int, Tuple[float, float]]:
                     review_array = np.concatenate((review_array, grade_array))
 
             correlations_per_student = np.concatenate((correlations_per_student, review_array))
+            # print(correlations_per_student)
+            # print(teacher_array_total)
             correlation = np.array(scipy.stats.pearsonr(correlations_per_student, teacher_array_total))
 
-        output[student] = correlation
+        output[student - 1] = correlation
 
     return output
 
 
 
 # Compute the pearson correlation coefficient per student, and adds (Nan, Nan) to tuple if student did not write reviews
-def compute_pearson_per_rubric() -> Dict[int, Tuple[float, float]]:
-    data_dict = pd.read_excel("data_v2.xlsx", None)
+def compute_pearson_per_rubric(input_path) -> Dict[int, Tuple[float, float]]:
+    data_dict = pd.read_excel(input_path, None)
     output = {}
-    review_amounts = amount_of_reviews()
+    review_amounts = amount_of_reviews(input_path)
     df = data_dict['true_grades']
 
     for rubric in range(1, 9):
@@ -102,9 +104,9 @@ def compute_pearson_per_rubric() -> Dict[int, Tuple[float, float]]:
 
 
 # could not make use of compute_pearson_per_topic directly, but makes much use of that code
-def pearson_per_topic_formatted(with_p=False):
+def pearson_per_topic_formatted(input_path, with_p=False):
     # global r_count
-    data_dict = pd.read_excel("data_v2.xlsx", None)
+    data_dict = pd.read_excel(input_path, None)
     output = np.zeros(shape=(config.r_count, 22, 2))
     teacher_grades_per_topic = get_true_grade_sets("data_v2.xlsx")
 
@@ -148,8 +150,8 @@ def pearson_per_topic_formatted(with_p=False):
 
 # Compute the validity using the Pearson correlation for each reviewer. Returns a dict with keys being the topic and
 # the value being a tuple with the correlation value and the two tailed p value.
-def compute_pearson_per_topic() -> Dict[int, Tuple[float, float]]:
-    data_dict = pd.read_excel("data_v2.xlsx", None)
+def compute_pearson_per_topic(input_path) -> Dict[int, Tuple[float, float]]:
+    data_dict = pd.read_excel(input_path, None)
     output = {}
     teacher_grades_per_topic = get_true_grade_sets("data_v2.xlsx")
 

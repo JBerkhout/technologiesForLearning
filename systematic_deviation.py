@@ -13,12 +13,12 @@ from variability import compute_variability_statistics, read_topic_variability_s
 
 
 # Returns a tuple with two arrays containing the high/low bias and the std bias for each reviewer respectively
-def compute_systematic_deviation_statistics() -> Tuple[List[float], List[float]]:
-    data_dict = pd.read_excel("data_v2.xlsx", None)
+def compute_systematic_deviation_statistics(input_path) -> Tuple[List[float], List[float]]:
+    data_dict = pd.read_excel(input_path, None)
 
     grades_list = list_grades_per_reviewer(data_dict)
-    high_low = sys_high_low_official()  # sys_high_low(grades_list)
-    spread =  sys_spread_official() # sys_spread(grades_list)
+    high_low = sys_high_low_official(input_path)  # sys_high_low(grades_list)
+    spread =  sys_spread_official(input_path) # sys_spread(grades_list)
     
     #print(high_low)
     #print(spread)
@@ -69,9 +69,9 @@ def sys_high_low2(grades_list):
 
 
 # with correct formula for sys_dev
-def sys_high_low_official(split_topics=False):
+def sys_high_low_official(input_path, split_topics=False):
     # global r_count
-    reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
+    reviewer_grade_sets = get_reviewer_grade_sets(input_path)  # shape(reviewers, topics, rubrics)
     topics_means_list = read_topic_variability_statistics(False)
 
     # get reviewers' grades mean for each topic
@@ -110,8 +110,8 @@ def sys_high_low_official(split_topics=False):
     return reviewer_sys_dev
 
 
-def sys_dev_ordering(split_topics=False):
-    reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
+def sys_dev_ordering(input_path, split_topics=False):
+    reviewer_grade_sets = get_reviewer_grade_sets(input_path)  # shape(reviewers, topics, rubrics)
     topics_means_list = read_topic_variability_statistics(False)
     if split_topics:
         return sys_dev_ordering_topics(reviewer_grade_sets)
@@ -187,8 +187,8 @@ def sys_spread(grades_list):
 
 
 # with correct formula for sys_dev
-def sys_spread_official(split_topics=False):
-    reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
+def sys_spread_official(input_path, split_topics=False):
+    reviewer_grade_sets = get_reviewer_grade_sets(input_path)  # shape(reviewers, topics, rubrics)
     topics_means_list = read_topic_variability_statistics(False)
 
     # get reviewers' grades mean std for each topic
@@ -275,8 +275,8 @@ def list_grades_per_reviewer(data_dict: pd.DataFrame):
 
 
 # Plot systematic deviations
-def plot_sys_dev_highlow() -> None:
-    out, _ = compute_systematic_deviation_statistics()
+def plot_sys_dev_highlow(input_path) -> None:
+    out, _ = compute_systematic_deviation_statistics(input_path)
     users = [i for i in range(1, len(out) + 2)]
     bad_user = 18
     users = users[:bad_user - 1] + users[bad_user:]
@@ -288,8 +288,8 @@ def plot_sys_dev_highlow() -> None:
 
 
 # Plot systematic deviations
-def plot_sys_dev_broadnarrow() -> None:
-    _, out = compute_systematic_deviation_statistics()
+def plot_sys_dev_broadnarrow(input_path) -> None:
+    _, out = compute_systematic_deviation_statistics(input_path)
     users = [i for i in range(1, len(out) + 2)]
     bad_user = 18
     users = users[:bad_user - 1] + users[bad_user:]

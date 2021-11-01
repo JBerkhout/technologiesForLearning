@@ -28,15 +28,15 @@ def plot_per_reviewer(metric):
     if metric == "inaccuracy":
         out = get_accuracy(INPUT_PATH)
     elif metric == "validity":
-        out = pearson_per_student_formatted()
+        out = pearson_per_student_formatted(INPUT_PATH)
     elif metric == "reliability":
-        out = compute_student_reliability()
+        out = compute_student_reliability(INPUT_PATH)
     elif metric == "systematic high/low peer bias":
-        out = sys_high_low_official()
+        out = sys_high_low_official(INPUT_PATH)
     elif metric == "systematic broad/narrow peer bias":
-        out = sys_spread_official()
+        out = sys_spread_official(INPUT_PATH)
     elif metric == "systematic problems in ordering":
-        out = sys_dev_ordering()
+        out = sys_dev_ordering(INPUT_PATH)
         y_label = "Rank correlation"  # atm with average ordering
     else:
         print("Metrics " + metric + " was not recognized...")

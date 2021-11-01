@@ -29,6 +29,8 @@ from pre_processing import get_reviewer_grade_sets
 
 def main(args):
     name = args.modelname
+    input_path = args.input
+    input_path_pred = "data_v2.xlsx"
     # global r_count
     # r_count = get_reviewer_grade_sets(args.input).__len__()
 
@@ -40,11 +42,11 @@ def main(args):
             print("Not implemented yet")
 
         elif (name == "accuracy"):
-            print(accuracy_grades())
+            print(accuracy_grades(False, input_path))
 
         elif (name == "validity"):
             # Solo: validity
-            print(validity_grades())
+            print(validity_grades(False, input_path))
 
         elif (name == "reliability"):
             # Solo: reliability
@@ -52,23 +54,23 @@ def main(args):
 
         elif (name == "sys_dev_high"):
             # Solo: systematic deviation: high/low
-            print(sys_dev_high_grades())
+            print(sys_dev_high_grades(False, input_path))
 
         elif (name == "sys_dev_wide"):
             # Solo: systematic deviation: broad/narrow
-            print(sys_dev_wide_grades())
+            print(sys_dev_wide_grades(False, input_path))
 
         elif (name == "sys_dev_order"):
             # Solo: systematic deviation: relative ordering
-            print(sys_dev_order_grades())
+            print(sys_dev_order_grades(False, input_path))
 
         elif (name == "sys_dev_full"):
             # Combined: all systematic deviation metrics
-            dev_high = sys_dev_high_grades()
-            dev_wide = sys_dev_wide_grades()
-            dev_ord  = sys_dev_order_grades()
+            dev_high = sys_dev_high_grades(False, input_path)
+            dev_wide = sys_dev_wide_grades(False, input_path)
+            dev_ord  = sys_dev_order_grades(False, input_path)
 
-            acc = accuracy_grades()
+            acc = accuracy_grades(False, input_path)
 
             corr_high = np.abs(pearsonr(acc, dev_high)[0])
             corr_wide = np.abs(pearsonr(acc, dev_wide)[0])
@@ -100,10 +102,10 @@ def main(args):
             # sys_dev_ord = compute_systematic_deviation_statistics()[1]
             # normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
 
-            dev_high = sys_dev_high_grades()
-            dev_wide = sys_dev_wide_grades()
-            dev_ord  = sys_dev_order_grades()
-            validity = validity_grades()
+            dev_high = sys_dev_high_grades(False, input_path)
+            dev_wide = sys_dev_wide_grades(False, input_path)
+            dev_ord  = sys_dev_order_grades(False, input_path)
+            validity = validity_grades(False, input_path)
             
             #total = (normalized_pear + normalized_rel + dev_high + dev_wide + dev_ord) / 5
             #print(total)
@@ -115,18 +117,15 @@ def main(args):
     elif(args.modeltype == "nn"):
         if (name == "generator"):
             # Run model named "generator"
-            print(gen.generate_data(1024))
+            gen.generate_data(65535)
             print("Test data successfully generated and can be found in data_generated.xls")
 
         elif (name == "accuracy"):
-            acc = get_accuracy(args.input)
-            normalized_acc = [normalize(acc, 0, 3, 1)]
-            print(normalized_acc)
+            nn_model([accuracy_grades(True, input_path)], [accuracy_grades(True, input_path_pred)], True)
 
         elif (name == "validity"):
             # Solo: validity
-            pear = pearson_per_student_formatted()
-            nn_model(validity_grades())
+            nn_model([validity_grades(True, input_path)], [validity_grades(True, input_path_pred)], True)
 
         elif (name == "reliability"):
             # Solo: reliability
@@ -134,29 +133,23 @@ def main(args):
 
         elif (name == "sys_dev_high"):
             # Solo: systematic deviation: high/low
-            sys_dev = compute_systematic_deviation_statistics()[0]
-            normalized_dev = [normalize(sys_dev, -2, 2, 0.5)]
-            nn_model(normalized_dev)
+            nn_model([sys_dev_high_grades(True, input_path)], [sys_dev_high_grades(True, input_path_pred)], True)
 
         elif (name == "sys_dev_wide"):
             # Solo: systematic deviation: broad/narrow
-            sys_dev = compute_systematic_deviation_statistics()[1]
-            normalized_dev = [normalize(sys_dev, -1, 1, .8)]
-            nn_model(normalized_dev)
+            nn_model([sys_dev_wide_grades(True, input_path)], [sys_dev_wide_grades(True, input_path_pred)], True)
 
         elif (name == "sys_dev_order"):
             # Solo: systematic deviation: relative ordering
-            sys_dev = compute_systematic_deviation_statistics()[1]
-            normalized_dev = [normalize(sys_dev, -1, 1, .8)]
-            nn_model(normalized_dev)
+            nn_model([sys_dev_order_grades(True, input_path)], [sys_dev_order_grades(True, input_path)], True)
 
         elif (name == "sys_dev_full"):
             # Combined: all systematic deviation metrics
-            sys_dev_high = compute_systematic_deviation_statistics()[0]
+            sys_dev_high = compute_systematic_deviation_statistics(input_path)[0]
             normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
-            sys_dev_wide = compute_systematic_deviation_statistics()[1]
+            sys_dev_wide = compute_systematic_deviation_statistics(input_path)[1]
             normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
-            sys_dev_ord = compute_systematic_deviation_statistics()[1]
+            sys_dev_ord = compute_systematic_deviation_statistics(input_path)[1]
             normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
 
             total_dev = [normalized_high, normalized_dev_wide, normalized_dev_ord]
@@ -178,15 +171,15 @@ def main(args):
             normalized_pear = normalize(pear, -1, 1, 0.2)
             rel = pearson_per_student_formatted() # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
             normalized_rel = normalize(rel, -1, 1, 0.2)
-            sys_dev_high = compute_systematic_deviation_statistics()[0]
+            sys_dev_high = compute_systematic_deviation_statistics(input_path)[0]
             normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
-            sys_dev_wide = compute_systematic_deviation_statistics()[1]
+            sys_dev_wide = compute_systematic_deviation_statistics(input_path)[1]
             normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
-            sys_dev_ord = compute_systematic_deviation_statistics()[1]
+            sys_dev_ord = compute_systematic_deviation_statistics(input_path)[1]
             normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
 
             total = [normalized_pear, normalized_rel, normalized_high, normalized_dev_wide, normalized_dev_ord]
-            nn_model(total)
+            nn_model(total, np.empty([5, config.r_count]), True)
 
         else:
             print("Model name not found")
@@ -213,16 +206,19 @@ def normalize(values, lower_bound, upper_bound, upper_cutoff):
             i += 1
     return grades
 
-def accuracy_grades():
-    try:
-        args
-    except NameError:
-        in_acc = get_accuracy("data_v2.xlsx")
-    else:
-        in_acc = get_accuracy(args.input)
+def accuracy_grades(use_nn, input_path):
+    # try:
+    #     args
+    # except NameError:
+    #     in_acc = get_accuracy("data_v2.xlsx")
+    # else:
+    #     in_acc = get_accuracy(args.input)
+    in_acc = get_accuracy(input_path)
     # normalized_acc = normalize(acc, 0, 3, 1)
     max_val = np.nanmax(in_acc)
     acc = max_val - in_acc
+    if(use_nn):
+        return acc
     mean = np.nanmean(acc)
     stdev = np.nanstd(acc)
     z = (acc - mean) / stdev
@@ -234,11 +230,13 @@ def accuracy_grades():
         i += 1
     return(percentage)
 
-def validity_grades():
-    pear = pearson_per_student_formatted()
+def validity_grades(use_nn, input_path):
+    pear = pearson_per_student_formatted(input_path)
     # Pearsons scales from -1 to +1, where higher is better. 
 
     abs_pear = np.abs(pear)
+    if(use_nn):
+        return abs_pear
     mean = np.nanmean(abs_pear)
     stdev = np.nanstd(abs_pear)
     z = (abs_pear - mean) / stdev
@@ -250,13 +248,15 @@ def validity_grades():
         i += 1
     return(percentage)
 
-def sys_dev_high_grades():
-    sys_dev = compute_systematic_deviation_statistics()[0]
+def sys_dev_high_grades(use_nn, input_path):
+    sys_dev = compute_systematic_deviation_statistics(input_path)[0]
     # normalized_dev = normalize(sys_dev, -2, 2, 0.5)
 
     abs_sys_dev = np.abs(sys_dev)
     max_val = np.nanmax(abs_sys_dev)
     abs_sys_dev_flip = max_val - abs_sys_dev
+    if(use_nn):
+        return abs_sys_dev_flip
     mean = np.nanmean(abs_sys_dev_flip)
     stdev = np.nanstd(abs_sys_dev_flip)
     z = (abs_sys_dev_flip - mean) / stdev
@@ -268,11 +268,13 @@ def sys_dev_high_grades():
         i += 1
     return(percentage)
 
-def sys_dev_wide_grades():
-    sys_dev = compute_systematic_deviation_statistics()[1]
+def sys_dev_wide_grades(use_nn, input_path):
+    sys_dev = compute_systematic_deviation_statistics(input_path)[1]
 
     max_val = np.nanmax(sys_dev)
     abs_sys_dev_flip = max_val - sys_dev
+    if(use_nn):
+        return abs_sys_dev_flip
     mean = np.nanmean(abs_sys_dev_flip)
     stdev = np.nanstd(abs_sys_dev_flip)
     z = (abs_sys_dev_flip - mean) / stdev
@@ -284,10 +286,12 @@ def sys_dev_wide_grades():
         i += 1
     return(percentage)
 
-def sys_dev_order_grades():
-    sys_dev = sys_dev_ordering()
+def sys_dev_order_grades(use_nn, input_path):
+    sys_dev = sys_dev_ordering(input_path)
 
     abs_sys_dev = np.abs(sys_dev)
+    if(use_nn):
+        return abs_sys_dev
     mean = np.nanmean(abs_sys_dev)
     stdev = np.nanstd(abs_sys_dev)
     z = (abs_sys_dev - mean) / stdev
@@ -305,53 +309,71 @@ def sys_dev_order_grades():
 
 
 # The simplest model, only based on accuracy
-def r_simple_model(input_path: str):
-    score = []
-    model = get_accuracy(input_path)
-    for reviewer_score in model:
-        score.append(max(1, min(10, (10 - (reviewer_score - 0.5) * 5))))
-    return score
+# def r_simple_model(input_path: str):
+#     score = []
+#     model = get_accuracy(input_path)
+#     for reviewer_score in model:
+#         score.append(max(1, min(10, (10 - (reviewer_score - 0.5) * 5))))
+#     return score
 
 
 # Simple neural network model, accuracy as labels, variability and grades(?) as input
-def nn_model(input_data):
+def nn_model(train_input_data, predict_input_data, train_network):
     # global r_count
-    data = np.zeros([config.r_count, input_data.__len__()])
-    i = 0
-    while (i < input_data.__len__()):
-        j = 0
-        while (j < config.r_count):
-            # Ugly fix for that annoying reviewer 18
-            if(j == 17):
-                data[j, i] = input_data[i][j-2]
-            else:
-                data[j, i] = input_data[i][j]
-            j += 1
-        i += 1
-
-    acc = get_accuracy(args.input)
-    labels = np.transpose([normalize(acc, 0, 3, 1)])
     
-    training_count = int(config.r_count * 0.8)
-
-    training_data = data[:training_count]
-    training_labels = labels[:training_count]
-
-    testing_data = data[training_count:]
-    testing_labels = labels[training_count:]
 
     # training_data = tf.data.Dataset.from_tensor_slices((data[:training_count],labels[:training_count])) 
     # testing_data = tf.data.Dataset.from_tensor_slices((data[training_count:],labels[training_count:])) 
 
-# Data you want to predict a reviewer grade for
-    data = [8]
-
 # DISABLE IF YOU GET ERROR: CORE DUMPED
-    network = nn.neural_network_model(args.modelname, input_data.__len__())
-    network.train(training_data, training_labels, testing_data, testing_labels, 1, 1)
-    predicted_grade = network.predict_grade(data)
+    network = nn.neural_network_model(args.modelname, train_input_data.__len__())
+    if(train_network):
+        data = np.zeros(shape=(config.r_train_count, train_input_data.__len__()))
+        i = 0
+        while (i < train_input_data.__len__()):
+            j = 0
+            while (j < config.r_train_count):
+                # Ugly fix for that annoying reviewer 18
+                # if(j == 17):
+                #     data[j, i] = train_input_data[i][j-2]
+                # else:   
+                data[j, i] = train_input_data[i][j]
+                j += 1
+            i += 1
 
-    print(predicted_grade)
+        #acc = get_accuracy(args.input)
+        labels = np.transpose(accuracy_grades(False, "data_generated.xls"))
+        
+        training_count = int(config.r_train_count * 0.8)
+
+        training_data = data[:training_count]
+        # print(training_data)
+        training_labels = labels[:training_count]
+        # print(training_labels)
+
+        testing_data = data[training_count:]
+        testing_labels = labels[training_count:]
+
+        network.train(training_data, training_labels, testing_data, testing_labels, 1, 1)
+        print("Network trained successfully!")
+    else:
+        predict_data = np.zeros([config.r_count, predict_input_data.__len__()])
+        i = 0
+        while (i < predict_input_data.__len__()):
+            j = 0
+            while (j < config.r_count):
+                # Ugly fix for that annoying reviewer 18
+                if(j == 17):
+                    predict_data[j, i] = predict_input_data[i][j-2]
+                else:
+                    predict_data[j, i] = predict_input_data[i][j]
+                j += 1
+            i += 1
+
+        # Data you want to predict a reviewer grade for
+        predicted_grade = network.predict_grade(predict_input_data)
+        print(predicted_grade)
+    
 
 ##############
 ##############

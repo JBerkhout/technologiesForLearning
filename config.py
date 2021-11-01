@@ -1,4 +1,5 @@
 r_count = 44
+r_train_count = 65535
 # INPUT_PATH = "data_v2.xlsx"
 # NR_REVIEWERS = r_count
 # NR_TOPICS = 22

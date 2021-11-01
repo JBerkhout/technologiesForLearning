@@ -29,7 +29,7 @@ def generate_data(reviewer_count):
 
             
 
-            print(rand_grade)
+            #print(rand_grade)
     wb.save("data_generated.xls")
 
 def gen_preparation():

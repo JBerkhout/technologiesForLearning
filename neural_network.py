@@ -27,7 +27,7 @@ class neural_network_model:
             tf.keras.layers.Dense(1, activation='relu')
         ])
 
-        model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.5, momentum=0.9),
+        model.compile(tf.keras.optimizers.Adam(learning_rate=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False,name='Adam',),
                       loss='mean_squared_error',
                       metrics=['accuracy'])
 
