@@ -6,7 +6,7 @@ import scipy.stats
 import matplotlib.pyplot as plt
 
 from pre_processing import get_true_grade_sets, get_review_amount_list
-
+from models import r_count
 
 # Validity can be computed with the Pearson product moment correlation
 # It is based on the assumption that the data is normally distributed.
@@ -102,8 +102,9 @@ def compute_pearson_per_rubric() -> Dict[int, Tuple[float, float]]:
 
 # could not make use of compute_pearson_per_topic directly, but makes much use of that code
 def pearson_per_topic_formatted(with_p=False):
+    global r_count
     data_dict = pd.read_excel("data_v2.xlsx", None)
-    output = np.zeros(shape=(44, 22, 2))
+    output = np.zeros(shape=(r_count, 22, 2))
     teacher_grades_per_topic = get_true_grade_sets("data_v2.xlsx")
 
     for reviewer in range(1, 45):
@@ -211,7 +212,7 @@ def plot_student_validity() -> None:
             student_correlation_values = np.concatenate((student_correlation_values, np.array([data[student][0]])))
     print(student_correlation_values)
 
-    topics = [i for i in range(1, 44 + 1)]  # 22 = nr of topics, not dynamic yet...
+    topics = [i for i in range(1, r_count + 1)]  # 22 = nr of topics, not dynamic yet...
     # We get rid of 18 because this student did not fill in any reviews.
     # This is not done dynamically, but for now, this is fine.
     topics.pop(17)

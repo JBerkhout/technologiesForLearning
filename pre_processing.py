@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from typing import Dict, List
+#from models import r_count
 
 
 # Returns an dictionary with the keys being topics and values an array with the students that presented that topic.
@@ -270,8 +271,10 @@ def get_true_grade_sets(input_path: str) -> List[List[float]]:
 # Returns a list of arrays of lists contain the grades given by each reviewer for each presentation
 # Basically for each reviewer contains a structure similar to true grades
 def get_reviewer_grade_sets(input_path: str) -> List[List[List[float]]]:
+    
     data_dict = pd.read_excel(input_path, None)
-
+    print(data_dict.__len__())
+    # global r_count
     reviewer_grade_sets = np.zeros(shape=(44, 22, 8))  # nr of reviewers, topics, rubrics
 
     for topic in range(1, 23):

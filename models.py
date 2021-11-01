@@ -13,6 +13,8 @@ import neural_network as nn
 import tensorflow as tf
 import keras
 from scipy.stats import pearsonr
+import training_data_generation as gen
+from pre_processing import get_reviewer_grade_sets
 
 # Use: python models.py -t rule -m simple -i data_v2.xlsx
 # to run the NN
@@ -25,6 +27,10 @@ from scipy.stats import pearsonr
 
 def main(args):
     name = args.modelname
+    global r_count
+    r_count = get_reviewer_grade_sets(args.input).__len__()
+
+    print(r_count)
     # Lets see if we want to run a rule based model
     if(args.modeltype == "rule"):
         if (name == "test"):
@@ -81,28 +87,34 @@ def main(args):
         
         elif (name == "all"):
             # Combined: # of reviews handed in, length of comments and consistency (variability of grades of a single student)
-            pear = pearson_per_student_formatted()
-            normalized_pear = normalize(pear, -1, 1, 0.2)
-            rel = pearson_per_student_formatted() # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
-            normalized_rel = normalize(rel, -1, 1, 0.2) 
-            sys_dev_high = compute_systematic_deviation_statistics()[0]
-            normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
-            sys_dev_wide = compute_systematic_deviation_statistics()[1]
-            normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
-            sys_dev_ord = compute_systematic_deviation_statistics()[1]
-            normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
+            # pear = pearson_per_student_formatted()
+            # normalized_pear = normalize(pear, -1, 1, 0.2)
+            # rel = pearson_per_student_formatted() # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
+            # normalized_rel = normalize(rel, -1, 1, 0.2) 
+            # sys_dev_high = compute_systematic_deviation_statistics()[0]
+            # normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
+            # sys_dev_wide = compute_systematic_deviation_statistics()[1]
+            # normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
+            # sys_dev_ord = compute_systematic_deviation_statistics()[1]
+            # normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
+
+            dev_high = sys_dev_high_grades()
+            dev_wide = sys_dev_wide_grades()
+            dev_ord  = sys_dev_order_grades()
+            validity = validity_grades()
             
-            total = (normalized_pear + normalized_rel + normalized_high + normalized_dev_wide + normalized_dev_ord) / 5
-            print(total)
+            #total = (normalized_pear + normalized_rel + dev_high + dev_wide + dev_ord) / 5
+            #print(total)
         
         else:
             print("Model name not found")
 
     # If not, did we want a neural network based one?
     elif(args.modeltype == "nn"):
-        if (name == "test"):
-            # Run model named "test"
-            print("Not implemented yet")
+        if (name == "generator"):
+            # Run model named "generator"
+            print(gen.generate_data(1024))
+            print("Test data successfully generated and can be found in data_generated.xls")
 
         elif (name == "accuracy"):
             acc = get_accuracy(args.input)
@@ -112,23 +124,7 @@ def main(args):
         elif (name == "validity"):
             # Solo: validity
             pear = pearson_per_student_formatted()
-            # Pearsons scales from -1 to +1, where higher is better. 
-            validity_score = np.zeros(44)
-            i = 0
-            for reviewer in pear:
-                if(math.abs(reviewer) < 0.1):
-                    validity_score[i] = 2
-                elif(math.abs(reviewer) < 0.3): 
-                    validity_score[i] = 4
-                elif(math.abs(reviewer) < 0.5):
-                    validity_score[i] = 6
-                elif(math.abs(reviewer) < 0.8):
-                    validity_score[i] = 8
-                elif(math.abs(reviewer) < 0.9):
-                    validity_score[i] = 10
-                i += 1
-            normalized_pear = [normalize(pear, -1, 1, 0.2)]
-            nn_model(normalized_pear)
+            nn_model(validity_grades())
 
         elif (name == "reliability"):
             # Solo: reliability
@@ -199,7 +195,8 @@ def main(args):
 # Method that normalizes output values to grades. values represents the array of values, lower and upper bound are the begin and end of the scale on which the values are placed, 
 # upper cutoff discounts the value required for a ten (higher value means higher grades all around)
 def normalize(values, lower_bound, upper_bound, upper_cutoff):
-    grades = np.zeros(44)
+    global r_count
+    grades = np.zeros(r_count)
     i = 0
     range = upper_bound - lower_bound
     for value in values:
@@ -311,11 +308,12 @@ def r_simple_model(input_path: str):
 
 # Simple neural network model, accuracy as labels, variability and grades(?) as input
 def nn_model(input_data):
-    data = np.zeros([44, input_data.__len__()])
+    global r_count
+    data = np.zeros([r_count, input_data.__len__()])
     i = 0
     while (i < input_data.__len__()):
         j = 0
-        while (j < 44):
+        while (j < r_count):
             # Ugly fix for that annoying reviewer 18
             if(j == 17):
                 data[j, i] = input_data[i][j-2]
@@ -327,7 +325,7 @@ def nn_model(input_data):
     acc = get_accuracy(args.input)
     labels = np.transpose([normalize(acc, 0, 3, 1)])
     
-    training_count = int(44 * 0.8)
+    training_count = int(r_count * 0.8)
 
     training_data = data[:training_count]
     training_labels = labels[:training_count]
@@ -363,7 +361,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--modeltype', choices=["rule","nn"],
                         help='The type of model you want to use')
 
-    parser.add_argument('-m', '--modelname', choices=["test","accuracy","validity","reliability","sys_dev_high","sys_dev_wide","sys_dev_order","sys_dev_full","val_rel","all"], default="accuracy",
+    parser.add_argument('-m', '--modelname', choices=["test","generator","accuracy","validity","reliability","sys_dev_high","sys_dev_wide","sys_dev_order","sys_dev_full","val_rel","all"], default="accuracy",
                         help='The name of the model you want to use')
 
     parser.add_argument('-i', '--input',

@@ -6,13 +6,14 @@ from scipy.stats.stats import pearsonr
 
 from pre_processing import get_topics_names_dict, get_theme_names_dict
 
+from models import r_count
 from accuracy import get_accuracy, accuracy_per_topic
 from systematic_deviation import sys_high_low_official, sys_spread_official, sys_dev_ordering
 from validity import pearson_per_student_formatted
 from variability import read_topic_variability_statistics
 
 INPUT_PATH = "data_v2.xlsx"
-NR_REVIEWERS = 44
+NR_REVIEWERS = r_count
 NR_TOPICS = 22
 NR_TOPICS_PER_THEME = (6, 3, 4, 3, 6)
 
