@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from numpy import ndarray
 
-from pre_processing import get_short_rubrics_names_dict, get_topics_names_dict, get_review_amount_list
+from pre_processing import get_review_amount_list
 
 
 # Compute the reliability for each student (being the std of all grades given by a student)
@@ -31,5 +31,36 @@ def compute_student_reliability() -> ndarray:
 
     return np.array(result_output)
 
+
+# Compute the reliability for each student, for each topic.
+def compute_student_topic_reliability() -> ndarray:
+    data_dict = pd.read_excel("data_v2.xlsx", None)
+    result_output = []
+    reviews_per_student = get_review_amount_list(data_dict)
+
+    for student in range(1, 45):
+        total_student_array = []
+
+        for topic in reviews_per_student[student]:
+            student_for_topic = []
+            tab_name = 'topic' + str(topic)
+            df = data_dict[tab_name]
+            student_row = df.loc[df['User'] == student].iloc[0]
+
+            for rubric in range(1, 9):
+                column_name = "Grade" + str(rubric)
+                grade = student_row[column_name]
+                student_for_topic.append(grade)
+
+            std = np.std(student_for_topic)
+            total_student_array.append(std)
+
+        result_output.append(total_student_array)
+
+    return np.array(result_output)
+
+
+
 # MAIN
 # compute_student_reliability()
+# compute_student_topic_reliability()
