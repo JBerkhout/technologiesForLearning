@@ -12,6 +12,7 @@ from systematic_deviation import compute_systematic_deviation_statistics, sys_de
 import neural_network as nn
 import tensorflow as tf
 import keras
+from scipy.stats import pearsonr
 
 # Use: python models.py -t rule -m simple -i data_v2.xlsx
 # to run the NN
@@ -31,16 +32,11 @@ def main(args):
             print("Not implemented yet")
 
         elif (name == "accuracy"):
-            acc = get_accuracy(args.input)
-            normalized_acc = normalize(acc, 0, 3, 1)
-            print(normalized_acc)
+            print(accuracy_grades())
 
         elif (name == "validity"):
             # Solo: validity
-            pear = pearson_per_student_formatted()
-            # Pearsons scales from -1 to +1, where higher is better. 
-            normalized_pear = normalize(pear, -1, 1, 0.2)
-            print(normalized_pear)
+            print(validity_grades())
 
         elif (name == "reliability"):
             # Solo: reliability
@@ -48,32 +44,29 @@ def main(args):
             
         elif (name == "sys_dev_high"):
             # Solo: systematic deviation: high/low
-            sys_dev = compute_systematic_deviation_statistics()[0]
-            normalized_dev = normalize(sys_dev, -2, 2, 0.5)
-            print(normalized_dev)
+            print(sys_dev_high_grades())
         
         elif (name == "sys_dev_wide"):
             # Solo: systematic deviation: broad/narrow
-            sys_dev = compute_systematic_deviation_statistics()[1]
-            normalized_dev = normalize(sys_dev, -1, 1, .8)
-            print(normalized_dev)
+            print(sys_dev_wide_grades())
             
         elif (name == "sys_dev_order"):
             # Solo: systematic deviation: relative ordering
-            sys_dev = compute_systematic_deviation_statistics()[1]
-            normalized_dev = normalize(sys_dev, -1, 1, .8)
-            print(normalized_dev)
+            print(sys_dev_order_grades())
         
         elif (name == "sys_dev_full"):
             # Combined: all systematic deviation metrics
-            sys_dev_high = compute_systematic_deviation_statistics()[0]
-            normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
-            sys_dev_wide = compute_systematic_deviation_statistics()[1]
-            normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
-            sys_dev_ord = compute_systematic_deviation_statistics()[1]
-            normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
+            dev_high = sys_dev_high_grades()
+            dev_wide = sys_dev_wide_grades()
+            dev_ord  = sys_dev_order_grades()
 
-            total_dev = (normalized_high + normalized_dev_wide + normalized_dev_ord) / 3
+            acc = accuracy_grades()
+
+            corr_high = np.abs(pearsonr(acc, dev_high)[0])
+            corr_wide = np.abs(pearsonr(acc, dev_wide)[0])
+            corr_ord  = np.abs(pearsonr(acc, dev_ord)[0])
+
+            total_dev = (dev_high * corr_high + dev_wide * corr_wide + dev_ord * corr_ord) / (corr_high + corr_wide + corr_ord)
             print(total_dev)
         
         elif (name == "val_rel"):
@@ -120,6 +113,20 @@ def main(args):
             # Solo: validity
             pear = pearson_per_student_formatted()
             # Pearsons scales from -1 to +1, where higher is better. 
+            validity_score = np.zeros(44)
+            i = 0
+            for reviewer in pear:
+                if(math.abs(reviewer) < 0.1):
+                    validity_score[i] = 2
+                elif(math.abs(reviewer) < 0.3): 
+                    validity_score[i] = 4
+                elif(math.abs(reviewer) < 0.5):
+                    validity_score[i] = 6
+                elif(math.abs(reviewer) < 0.8):
+                    validity_score[i] = 8
+                elif(math.abs(reviewer) < 0.9):
+                    validity_score[i] = 10
+                i += 1
             normalized_pear = [normalize(pear, -1, 1, 0.2)]
             nn_model(normalized_pear)
 
@@ -207,7 +214,86 @@ def normalize(values, lower_bound, upper_bound, upper_cutoff):
             i += 1
     return grades
 
+def accuracy_grades():
+    in_acc = get_accuracy(args.input)
+    # normalized_acc = normalize(acc, 0, 3, 1)
+    max_val = np.nanmax(in_acc)
+    acc = max_val - in_acc
+    mean = np.nanmean(acc)
+    stdev = np.nanstd(acc)
+    z = (acc - mean) / stdev
+    percentage = np.nan_to_num(7.0 + z)
 
+    i = 0
+    for value in percentage:
+        percentage[i] = max(0, min(10, value))
+        i += 1
+    return(percentage)
+
+def validity_grades():
+    pear = pearson_per_student_formatted()
+    # Pearsons scales from -1 to +1, where higher is better. 
+
+    abs_pear = np.abs(pear)
+    mean = np.nanmean(abs_pear)
+    stdev = np.nanstd(abs_pear)
+    z = (abs_pear - mean) / stdev
+    percentage = np.nan_to_num(7.5 + z)
+    
+    i = 0
+    for value in percentage:
+        percentage[i] = max(0, min(10, value))
+        i += 1
+    return(percentage)
+
+def sys_dev_high_grades():
+    sys_dev = compute_systematic_deviation_statistics()[0]
+    # normalized_dev = normalize(sys_dev, -2, 2, 0.5)
+
+    abs_sys_dev = np.abs(sys_dev)
+    max_val = np.nanmax(abs_sys_dev)
+    abs_sys_dev_flip = max_val - abs_sys_dev
+    mean = np.nanmean(abs_sys_dev_flip)
+    stdev = np.nanstd(abs_sys_dev_flip)
+    z = (abs_sys_dev_flip - mean) / stdev
+    percentage = np.nan_to_num(6.5 + z)
+
+    i = 0
+    for value in percentage:
+        percentage[i] = max(0, min(10, value))
+        i += 1
+    return(percentage)
+
+def sys_dev_wide_grades():
+    sys_dev = compute_systematic_deviation_statistics()[1]
+
+    max_val = np.nanmax(sys_dev)
+    abs_sys_dev_flip = max_val - sys_dev
+    mean = np.nanmean(abs_sys_dev_flip)
+    stdev = np.nanstd(abs_sys_dev_flip)
+    z = (abs_sys_dev_flip - mean) / stdev
+    percentage = np.nan_to_num(6.5 + z)
+
+    i = 0
+    for value in percentage:
+        percentage[i] = max(0, min(10, value))
+        i += 1
+    return(percentage)
+
+def sys_dev_order_grades():
+    sys_dev = sys_dev_ordering()
+
+    abs_sys_dev = np.abs(sys_dev)
+    mean = np.nanmean(abs_sys_dev)
+    stdev = np.nanstd(abs_sys_dev)
+    z = (abs_sys_dev - mean) / stdev
+    percentage = np.nan_to_num(7.5 + z)
+
+    i = 0
+    for value in percentage:
+        percentage[i] = max(0, min(10, value))
+        i += 1
+    return(percentage)
 
 ##############
 ### MODELS ###

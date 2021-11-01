@@ -249,4 +249,4 @@ def plot_rubric_validity() -> None:
 # MAIN
 # plot_topic_validity()
 # plot_student_validity()
-plot_rubric_validity()
+# plot_rubric_validity()
