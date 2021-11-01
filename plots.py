@@ -11,6 +11,7 @@ from accuracy import get_accuracy, accuracy_per_topic
 from systematic_deviation import sys_high_low_official, sys_spread_official, sys_dev_ordering
 from validity import pearson_per_student_formatted
 from variability import read_topic_variability_statistics
+from reliability import compute_student_reliability
 
 INPUT_PATH = "data_v2.xlsx"
 NR_REVIEWERS = r_count
@@ -18,7 +19,7 @@ NR_TOPICS = 22
 NR_TOPICS_PER_THEME = (6, 3, 4, 3, 6)
 
 # change colors and run the line below to change the colors used in the plot
-COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'purple', 'pink', 'brown', 'orange', 'teal', 'coral', 'lightblue', 'lime', 'lavender', 'turquoise', 'darkgreen', 'tan', 'salmon', 'gold']
+COLORS = ['#ff1969', '#ffbd59', '#00c2cb', '#3788d4', '#044aad', '#000000']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 
 
@@ -29,8 +30,7 @@ def plot_per_reviewer(metric):
     elif metric == "validity":
         out = pearson_per_student_formatted()
     elif metric == "reliability":
-        print("Metrics " + metric + " has not been implemented yet...")
-        return
+        out = compute_student_reliability()
     elif metric == "systematic high/low peer bias":
         out = sys_high_low_official()
     elif metric == "systematic broad/narrow peer bias":
@@ -106,9 +106,8 @@ def plot_per_topic(metric, with_names=True, grouped="not"):
 
 
 def plot_correlation_metrics_with_acc():
-    # reliability not yet added, because not yet implemented
     # (in)accuracy used for 'true' grades for quality
-    metrics = ["validity", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
+    metrics = ["validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
     acc = get_accuracy(INPUT_PATH)
 
     out = []
@@ -117,8 +116,7 @@ def plot_correlation_metrics_with_acc():
         if metric == "validity":
             values = pearson_per_student_formatted()
         elif metric == "reliability":
-            print("Metrics " + metric + " has not been implemented yet...")
-            return
+            values = compute_student_reliability()
         elif metric == "systematic high/low peer bias":
             values = sys_high_low_official()
         elif metric == "systematic broad/narrow peer bias":
@@ -140,7 +138,6 @@ def plot_correlation_metrics_with_acc():
         out.append(np.abs(corr))
         p_values.append(p)
 
-    # print(out)
     metrics_labels = (np.array([[metric.capitalize(), "Absolute " + metric] for metric in metrics])).flatten()
     bars = plt.bar(metrics_labels, out)  # , color=COLOR)
     for bar_id in range(len(bars)):
@@ -155,16 +152,15 @@ def plot_correlation_metrics_with_acc():
 
 def plot_correlation_combined_metrics_with_acc():
     # not yet implemented metrics not yet added     e.g. validity and reliability
-    metrics = ["systematic deviations"]
+    metrics = ["validity and reliability", "systematic deviations"]
     acc = get_accuracy(INPUT_PATH)
 
     out = []
     p_values = []
     for metric in metrics:
         if metric == "validity and reliability":
-            print("Metrics " + metric + " has not been implemented yet...")
-            # values = pearson_per_student_formatted()
-            return
+            weights = [0.2887592359980593, 0.7098815979902631]
+            values = weights[0]*pearson_per_student_formatted() + weights[1]*compute_student_reliability()
         elif metric == "systematic deviations":
             weights = [0.8140871113424963, 0.6365323717653268, 0.17101072421329433]  # values of correlations found earlier, not dynamic yet
             values = weights[0]*np.abs(sys_high_low_official()) + weights[1]*sys_spread_official() + weights[2]*np.abs(sys_dev_ordering())
