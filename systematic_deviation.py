@@ -1,3 +1,4 @@
+import config
 from typing import Tuple, List
 import pandas as pd
 import numpy as np
@@ -6,7 +7,7 @@ import warnings
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
 
-from models import r_count
+# from models import r_count
 from accuracy import get_reviewer_grade_sets
 from variability import compute_variability_statistics, read_topic_variability_statistics
 
@@ -69,7 +70,7 @@ def sys_high_low2(grades_list):
 
 # with correct formula for sys_dev
 def sys_high_low_official(split_topics=False):
-    global r_count
+    # global r_count
     reviewer_grade_sets = get_reviewer_grade_sets("data_v2.xlsx")  # shape(reviewers, topics, rubrics)
     topics_means_list = read_topic_variability_statistics(False)
 
@@ -93,7 +94,7 @@ def sys_high_low_official(split_topics=False):
         means_topics_reviewers.append(means_topics)
 
     # calculate mean of the difference between earlier calculated means
-    total_topic_sys_dev = np.zeros(shape=(r_count, 22))
+    total_topic_sys_dev = np.zeros(shape=(config.r_count, 22))
     for reviewer_id in range(0, len(means_topics_reviewers)):
         total_topic_sys_dev[reviewer_id] = means_topics_reviewers[reviewer_id] - topic_means
 
@@ -141,7 +142,7 @@ def sys_dev_ordering(split_topics=False):
         reviewers_topic_ordering.append(np.argsort(reviewer_means))
 
     # calculate correlation between each reviewer's and average ranking of topics
-    total_sys_dev = np.zeros(shape=r_count)
+    total_sys_dev = np.zeros(shape=config.r_count)
     for reviewer_id in range(0, len(reviewers_topic_ordering)):
         total_sys_dev[reviewer_id], p = spearmanr(reviewers_topic_ordering[reviewer_id], avg_topic_ordering)
 
@@ -210,7 +211,7 @@ def sys_spread_official(split_topics=False):
         means_topics_reviewers.append(means_topics)
 
     # calculate mean of the difference between earlier calculated means
-    total_topic_sys_dev = np.zeros(shape=(r_count, 22))
+    total_topic_sys_dev = np.zeros(shape=(config.r_count, 22))
     for reviewer_id in range(0, len(means_topics_reviewers)):
         total_topic_sys_dev[reviewer_id] = means_topics_reviewers[reviewer_id] - topic_means
 
@@ -237,9 +238,9 @@ def average(value_list: List[float]) -> None or float:
 # If a reviewer never handed in any grades, nan is put in place instead
 def list_grades_per_reviewer(data_dict: pd.DataFrame):
     # Create and initialize array of empty lists to store grades in
-    reviewer_grades = np.empty(r_count, dtype=list)
+    reviewer_grades = np.empty(config.r_count, dtype=list)
     i = 0
-    while i < r_count:
+    while i < config.r_count:
         reviewer_grades[i] = []
         i += 1
 
@@ -251,7 +252,7 @@ def list_grades_per_reviewer(data_dict: pd.DataFrame):
         i = 1
 
         # Loop over all reviewers
-        while i < r_count + 1: # 44
+        while i < config.r_count + 1: # 44
             entry = df[df["User"] == i]
             
             # Safeguard to check if the student graded this presentation. If not, move on to the next student

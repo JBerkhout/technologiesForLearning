@@ -1,3 +1,4 @@
+import config
 import math
 import argparse
 import matplotlib as mpl
@@ -28,10 +29,10 @@ from pre_processing import get_reviewer_grade_sets
 
 def main(args):
     name = args.modelname
-    global r_count
-    r_count = get_reviewer_grade_sets(args.input).__len__()
+    # global r_count
+    # r_count = get_reviewer_grade_sets(args.input).__len__()
 
-    print(r_count)
+    # print(r_count)
     # Lets see if we want to run a rule based model
     if(args.modeltype == "rule"):
         if (name == "test"):
@@ -196,8 +197,8 @@ def main(args):
 # Method that normalizes output values to grades. values represents the array of values, lower and upper bound are the begin and end of the scale on which the values are placed, 
 # upper cutoff discounts the value required for a ten (higher value means higher grades all around)
 def normalize(values, lower_bound, upper_bound, upper_cutoff):
-    global r_count
-    grades = np.zeros(r_count)
+    # global r_count
+    grades = np.zeros(config.r_count)
     i = 0
     range = upper_bound - lower_bound
     for value in values:
@@ -314,12 +315,12 @@ def r_simple_model(input_path: str):
 
 # Simple neural network model, accuracy as labels, variability and grades(?) as input
 def nn_model(input_data):
-    global r_count
-    data = np.zeros([r_count, input_data.__len__()])
+    # global r_count
+    data = np.zeros([config.r_count, input_data.__len__()])
     i = 0
     while (i < input_data.__len__()):
         j = 0
-        while (j < r_count):
+        while (j < config.r_count):
             # Ugly fix for that annoying reviewer 18
             if(j == 17):
                 data[j, i] = input_data[i][j-2]
@@ -331,7 +332,7 @@ def nn_model(input_data):
     acc = get_accuracy(args.input)
     labels = np.transpose([normalize(acc, 0, 3, 1)])
     
-    training_count = int(r_count * 0.8)
+    training_count = int(config.r_count * 0.8)
 
     training_data = data[:training_count]
     training_labels = labels[:training_count]
@@ -363,7 +364,7 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 
 def plot_grades_per_reviewer_rule_based():
     metrics = ["systematic problems in ordering", "systematic broad/narrow peer bias", "systematic high/low peer bias", "validity", "accuracy"]
-    reviewer_ids = [i for i in range(1, 44 + 1)]
+    reviewer_ids = [i for i in range(1, config.r_count + 1)]
 
     for metric in metrics:
         if metric == "accuracy":
@@ -384,7 +385,7 @@ def plot_grades_per_reviewer_rule_based():
             return
 
         assert grades.ndim == 1
-        assert len(grades) == 44
+        assert len(grades) == config.r_count
         plt.scatter(reviewer_ids, grades, label=metric)
 
     plt.title('Bar plot of rule-based model grades for each peer reviewer')

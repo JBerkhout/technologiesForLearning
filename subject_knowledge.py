@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, List
-
+import config
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -15,7 +15,7 @@ def compute_subject_knowledge() -> [Dict[str, bool]]:
     df = data_dict['main']
     output = []
 
-    for student in range(1, 45):
+    for student in range(1, config.r_count+1):
         student_row = df.loc[df['User'] == student]
         theme_presented = str(student_row['Topic'].tolist()[0])[0]
 

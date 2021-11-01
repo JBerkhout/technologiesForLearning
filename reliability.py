@@ -1,3 +1,4 @@
+import config
 import pandas as pd
 import numpy as np
 from numpy import ndarray
@@ -10,7 +11,7 @@ def compute_student_reliability() -> ndarray:
     result_output = []
     reviews_per_student = get_review_amount_list(data_dict)
 
-    for student in range(1, 45):
+    for student in range(1, config.r_count+1):
         total_student_array = []
 
         for topic in reviews_per_student[student]:
@@ -35,7 +36,7 @@ def compute_student_topic_reliability() -> ndarray:
     result_output = []
     reviews_per_student = get_review_amount_list(data_dict)
 
-    for student in range(1, 45):
+    for student in range(1, config.r_count+1):
         total_student_array = np.zeros(shape=22)
 
         for topic in reviews_per_student[student]:

@@ -1,3 +1,4 @@
+import config
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -235,13 +236,13 @@ def are_there_duplicate_reviews(data_dict: pd.DataFrame) -> bool:
 def get_review_amount_list(data_dict: pd.DataFrame) -> Dict[int, List[int]]:
     review_amounts_dict = {}
 
-    for student in range(1, 45):
+    for student in range(1, config.r_count+1):
         review_amounts_dict[student] = []
 
     for topic in range(1, 23):
         tab_name = 'topic' + str(topic)
         df = data_dict[tab_name]
-        for student in range(1, 45):
+        for student in range(1, config.r_count+1):
             if student in df.loc[:, 'User'].values:
                 review_amounts_dict[student].append(topic)
     return review_amounts_dict
@@ -273,16 +274,16 @@ def get_true_grade_sets(input_path: str) -> List[List[float]]:
 def get_reviewer_grade_sets(input_path: str) -> List[List[List[float]]]:
     
     data_dict = pd.read_excel(input_path, None)
-    print(data_dict.__len__())
+    # print(data_dict.__len__())
     # global r_count
-    reviewer_grade_sets = np.zeros(shape=(44, 22, 8))  # nr of reviewers, topics, rubrics
+    reviewer_grade_sets = np.zeros(shape=(config.r_count, 22, 8))  # nr of reviewers, topics, rubrics
 
     for topic in range(1, 23):
         tab_name = 'topic' + str(topic)
         df = data_dict[tab_name]
 
         reviewer_nr = 1
-        while reviewer_nr <= 44:  # df.__len__():
+        while reviewer_nr <= config.r_count:  # df.__len__():
             grades = []
             localdf = df[df["User"] == reviewer_nr]
 

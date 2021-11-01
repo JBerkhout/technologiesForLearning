@@ -1,3 +1,4 @@
+import config
 from scipy.stats import trim_mean
 import math
 import numpy as np
@@ -67,7 +68,7 @@ def accuracy_per_topic(input_path: str):
 # Plots the general accuracy for each peer reviewer
 def plot_accuracy(input_path: str) -> None:
     out = get_accuracy(input_path)
-    users = [i for i in range(1, len(out) + 1)]
+    users = [i for i in range(1, config.r_count + 1)]
     plt.bar(users, out)
     plt.title('Bar plot of inaccuracy for each peer reviewer')  # TODO: atm inaccuracy function
     plt.xlabel('ID of peer reviewer')

@@ -1,3 +1,4 @@
+import config
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
@@ -6,7 +7,7 @@ from scipy.stats.stats import pearsonr
 
 from pre_processing import get_topics_names_dict, get_theme_names_dict
 
-from models import r_count
+# from models import r_count
 from accuracy import get_accuracy, accuracy_per_topic
 from systematic_deviation import sys_high_low_official, sys_spread_official, sys_dev_ordering
 from validity import pearson_per_student_formatted
@@ -14,7 +15,6 @@ from variability import read_topic_variability_statistics
 from reliability import compute_student_reliability
 
 INPUT_PATH = "data_v2.xlsx"
-NR_REVIEWERS = r_count
 NR_TOPICS = 22
 NR_TOPICS_PER_THEME = (6, 3, 4, 3, 6)
 
@@ -43,7 +43,7 @@ def plot_per_reviewer(metric):
         return
 
     assert out.ndim == 1
-    assert len(out) == NR_REVIEWERS
+    assert len(out) == config.r_count
 
     users = [i for i in range(1, len(out) + 1)]
     plt.bar(users, out)  # , color=COLOR)
