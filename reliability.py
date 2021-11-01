@@ -6,10 +6,10 @@ from pre_processing import get_review_amount_list
 
 
 # Compute the reliability for each student (being the std of all grades given by a student)
-def compute_student_reliability() -> ndarray:
-    data_dict = pd.read_excel("data_v2.xlsx", None)
+def compute_student_reliability(input_path: str) -> ndarray:
+    data_dict = pd.read_excel(input_path, None)
     result_output = []
-    reviews_per_student = get_review_amount_list(data_dict)
+    reviews_per_student = get_review_amount_list(data_dict, config.r_count)
 
     for student in range(1, config.r_count+1):
         total_student_array = []

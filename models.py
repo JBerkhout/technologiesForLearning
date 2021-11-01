@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from pandas.core.frame import DataFrame
 import variability
 from accuracy import get_accuracy
+from reliability import compute_student_reliability
 from validity import pearson_per_student_formatted
 from systematic_deviation import compute_systematic_deviation_statistics, sys_dev_ordering
 import neural_network as nn
@@ -50,7 +51,7 @@ def main(args):
 
         elif (name == "reliability"):
             # Solo: reliability
-            print("Not implemented")
+            print(reliability_grades(False, input_path))
 
         elif (name == "sys_dev_high"):
             # Solo: systematic deviation: high/low
@@ -230,6 +231,32 @@ def accuracy_grades(use_nn, input_path):
         i += 1
     return(percentage)
 
+
+def reliability_grades(use_nn, input_path):
+    # try:
+    #     args
+    # except NameError:
+    #     in_acc = get_accuracy("data_v2.xlsx")
+    # else:
+    #     in_acc = get_accuracy(args.input)
+    rel = compute_student_reliability(input_path)
+    # normalized_acc = normalize(acc, 0, 3, 1)
+    max_val = np.nanmax(rel)
+    rel = max_val - rel
+    if use_nn:
+        return rel
+    mean = np.nanmean(rel)
+    stdev = np.nanstd(rel)
+    z = (rel - mean) / stdev
+    percentage = np.nan_to_num(7.0 + z)
+
+    i = 0
+    for value in percentage:
+        percentage[i] = max(0, min(10, value))
+        i += 1
+    return percentage
+
+
 def validity_grades(use_nn, input_path):
     pear = pearson_per_student_formatted(input_path)
     # Pearsons scales from -1 to +1, where higher is better. 
@@ -385,23 +412,22 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 
 
 def plot_grades_per_reviewer_rule_based():
-    metrics = ["systematic problems in ordering", "systematic broad/narrow peer bias", "systematic high/low peer bias", "validity", "accuracy"]
+    metrics = ["systematic problems in ordering", "systematic broad/narrow peer bias", "systematic high/low peer bias", "reliability", "validity", "accuracy"]
     reviewer_ids = [i for i in range(1, config.r_count + 1)]
 
     for metric in metrics:
         if metric == "accuracy":
-            grades = accuracy_grades()
+            grades = accuracy_grades(False, "data_v2.xlsx")
         elif metric == "validity":
-            grades = validity_grades()
+            grades = validity_grades(False, "data_v2.xlsx")
         elif metric == "reliability":
-            print("Metrics " + metric + " has not been implemented yet...")
-            return
+            grades = reliability_grades(False, "data_v2.xlsx")
         elif metric == "systematic high/low peer bias":
-            grades = sys_dev_high_grades()
+            grades = sys_dev_high_grades(False, "data_v2.xlsx")
         elif metric == "systematic broad/narrow peer bias":
-            grades = sys_dev_wide_grades()
+            grades = sys_dev_wide_grades(False, "data_v2.xlsx")
         elif metric == "systematic problems in ordering":
-            grades = sys_dev_order_grades()
+            grades = sys_dev_order_grades(False, "data_v2.xlsx")
         else:
             print("Metrics " + metric + " was not recognized...")
             return
@@ -422,24 +448,23 @@ def plot_correlation_grades_with_acc(model):
     # reliability not yet added, because not yet implemented
     # neural network model not yet added, because not yet implemented
     # (in)accuracy used for 'true' grades for quality
-    metrics = ["validity", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
-    acc = accuracy_grades()
+    metrics = ["validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
+    acc = accuracy_grades(False, "data_v2.xlsx")
 
     out = []
     p_values = []
     for metric in metrics:
         if model == "rule-based":
             if metric == "validity":
-                values = validity_grades()
+                values = validity_grades(False, "data_v2.xlsx")
             elif metric == "reliability":
-                print("Metrics " + metric + " has not been implemented yet...")
-                return
+                values = reliability_grades(False, "data_v2.xlsx")
             elif metric == "systematic high/low peer bias":
-                values = sys_dev_high_grades()
+                values = sys_dev_high_grades(False, "data_v2.xlsx")
             elif metric == "systematic broad/narrow peer bias":
-                values = sys_dev_wide_grades()
+                values = sys_dev_wide_grades(False, "data_v2.xlsx")
             elif metric == "systematic problems in ordering":
-                values = sys_dev_order_grades()
+                values = sys_dev_order_grades(False, "data_v2.xlsx")
             else:
                 print("Metrics " + metric + " was not recognized...")
                 return
@@ -473,9 +498,9 @@ def plot_correlation_grades_with_acc(model):
     bars = plt.bar([metric.capitalize() for metric in metrics], out)  # , color=COLOR)
     for bar_id in range(len(bars)):
         plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005, "p-value: " + "{:.2e}".format(p_values[bar_id]))
-    plt.title('Bar plot of absolute correlation with grades for each metric model per reviewer')
+    plt.title('Bar plot of absolute correlation with rule-based grades for each metric model')
     plt.xlabel('Metric')
-    plt.xticks(rotation=90)
+    # plt.xticks(rotation=90)
     plt.ylabel('Absolute correlation')
     plt.grid()
     plt.show()

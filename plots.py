@@ -114,15 +114,15 @@ def plot_correlation_metrics_with_acc():
     p_values = []
     for metric in metrics:
         if metric == "validity":
-            values = pearson_per_student_formatted()
+            values = pearson_per_student_formatted("data_v2.xlsx")
         elif metric == "reliability":
-            values = compute_student_reliability()
+            values = compute_student_reliability("data_v2.xlsx")
         elif metric == "systematic high/low peer bias":
-            values = sys_high_low_official()
+            values = sys_high_low_official("data_v2.xlsx")
         elif metric == "systematic broad/narrow peer bias":
-            values = sys_spread_official()
+            values = sys_spread_official("data_v2.xlsx")
         elif metric == "systematic problems in ordering":
-            values = sys_dev_ordering()
+            values = sys_dev_ordering("data_v2.xlsx")
         else:
             print("Metrics " + metric + " was not recognized...")
             return
@@ -142,10 +142,10 @@ def plot_correlation_metrics_with_acc():
     bars = plt.bar(metrics_labels, out)  # , color=COLOR)
     for bar_id in range(len(bars)):
         plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005, "p-value: " + "{:.2e}".format(p_values[bar_id]))
-    plt.title('Bar plot of absolute correlation with accuracy for each metric per reviewer')
-    plt.xlabel('Metric')
-    plt.xticks(rotation=90)
-    plt.ylabel('Absolute correlation')
+    plt.title('Bar plot of absolute correlation with accuracy for each metric per reviewer', fontsize=25)
+    plt.xlabel('Metric', fontsize=20)
+    plt.xticks(rotation=90, fontsize=15)
+    plt.ylabel('Absolute correlation', fontsize=20)
     plt.grid()
     plt.show()
 
@@ -160,10 +160,10 @@ def plot_correlation_combined_metrics_with_acc():
     for metric in metrics:
         if metric == "validity and reliability":
             weights = [0.2887592359980593, 0.7098815979902631]
-            values = weights[0]*pearson_per_student_formatted() + weights[1]*compute_student_reliability()
+            values = weights[0]*pearson_per_student_formatted("data_v2.xlsx") + weights[1]*compute_student_reliability("data_v2.xlsx")
         elif metric == "systematic deviations":
             weights = [0.8140871113424963, 0.6365323717653268, 0.17101072421329433]  # values of correlations found earlier, not dynamic yet
-            values = weights[0]*np.abs(sys_high_low_official()) + weights[1]*sys_spread_official() + weights[2]*np.abs(sys_dev_ordering())
+            values = weights[0]*np.abs(sys_high_low_official("data_v2.xlsx")) + weights[1]*sys_spread_official("data_v2.xlsx") + weights[2]*np.abs(sys_dev_ordering())
         else:
             print("Metrics " + metric + " was not recognized...")
             return

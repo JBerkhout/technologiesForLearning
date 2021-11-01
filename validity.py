@@ -39,9 +39,9 @@ def compute_pearson_per_student(input_path) -> Dict[int, Tuple[float, float]]:
     data_dict = pd.read_excel(input_path, None)
     output = {}
     teacher_grades_per_topic = get_true_grade_sets("data_v2.xlsx")
-    reviews_per_student = get_review_amount_list(data_dict, data_dict["topic1"].__len__())
+    reviews_per_student = get_review_amount_list(data_dict, config.r_count)
 
-    for student in range(1, data_dict["topic1"].__len__()+1):
+    for student in range(1, config.r_count+1):
         teacher_array_total = np.array([])
         correlations_per_student = np.array([])
         review_array = np.array([])

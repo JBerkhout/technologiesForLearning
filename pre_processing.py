@@ -276,14 +276,14 @@ def get_reviewer_grade_sets(input_path: str) -> List[List[List[float]]]:
     data_dict = pd.read_excel(input_path, None)
     # print(data_dict["topic1"].__len__())
     # global r_count
-    reviewer_grade_sets = np.zeros(shape=(data_dict["topic1"].__len__(), 22, 8))  # nr of reviewers, topics, rubrics
+    reviewer_grade_sets = np.zeros(shape=(config.r_count, 22, 8))  # nr of reviewers, topics, rubrics
 
     for topic in range(1, 23):
         tab_name = 'topic' + str(topic)
         df = data_dict[tab_name]
 
         reviewer_nr = 1
-        while reviewer_nr <= data_dict["topic1"].__len__():  # df.__len__():
+        while reviewer_nr <= config.r_count:  # df.__len__():
             grades = []
             localdf = df[df["User"] == reviewer_nr]
 
