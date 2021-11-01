@@ -366,7 +366,6 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 def plot_grades_per_reviewer_rule_based():
     metrics = ["systematic problems in ordering", "systematic broad/narrow peer bias", "systematic high/low peer bias", "validity", "accuracy"]
     reviewer_ids = [i for i in range(1, 44 + 1)]
-    plotdata = pd.DataFrame({}, index=reviewer_ids)
 
     for metric in metrics:
         if metric == "accuracy":
@@ -388,13 +387,13 @@ def plot_grades_per_reviewer_rule_based():
 
         assert grades.ndim == 1
         assert len(grades) == 44
-        plotdata.insert(0, metric, grades)
+        plt.scatter(reviewer_ids, grades, label=metric)
 
-    plotdata.plot(kind="bar")
     plt.title('Bar plot of rule-based model grades for each peer reviewer')
     plt.xlabel('ID of peer reviewer')
     plt.ylabel("Grades according to rule-based model")
     plt.grid()
+    plt.legend()
     plt.show()
 
 

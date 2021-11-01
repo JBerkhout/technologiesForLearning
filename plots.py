@@ -137,7 +137,6 @@ def plot_correlation_metrics_with_acc():
         out.append(np.abs(corr))
         p_values.append(p)
 
-    # print(out)
     metrics_labels = (np.array([[metric.capitalize(), "Absolute " + metric] for metric in metrics])).flatten()
     bars = plt.bar(metrics_labels, out)  # , color=COLOR)
     for bar_id in range(len(bars)):
@@ -152,16 +151,15 @@ def plot_correlation_metrics_with_acc():
 
 def plot_correlation_combined_metrics_with_acc():
     # not yet implemented metrics not yet added     e.g. validity and reliability
-    metrics = ["systematic deviations"]
+    metrics = ["validity and reliability", "systematic deviations"]
     acc = get_accuracy(INPUT_PATH)
 
     out = []
     p_values = []
     for metric in metrics:
         if metric == "validity and reliability":
-            print("Metrics " + metric + " has not been implemented yet...")
-            # values = pearson_per_student_formatted()
-            return
+            weights = [0.2887592359980593, 0.7098815979902631]
+            values = weights[0]*pearson_per_student_formatted() + weights[1]*compute_student_reliability()
         elif metric == "systematic deviations":
             weights = [0.8140871113424963, 0.6365323717653268, 0.17101072421329433]  # values of correlations found earlier, not dynamic yet
             values = weights[0]*np.abs(sys_high_low_official()) + weights[1]*sys_spread_official() + weights[2]*np.abs(sys_dev_ordering())
