@@ -157,7 +157,7 @@ def plot_correlation_metrics_with_acc():
 
 def plot_correlation_combined_metrics_with_acc():
     # not yet implemented metrics not yet added     e.g. validity and reliability
-    metrics = ["validity and reliability", "systematic deviations"]
+    metrics = ["validity and reliability", "systematic deviations", "all individual metrics combined"]
     acc = get_accuracy(INPUT_PATH)
 
     out = []
@@ -168,7 +168,10 @@ def plot_correlation_combined_metrics_with_acc():
             values = weights[0]*pearson_per_student_formatted("data_v2.xlsx") + weights[1]*compute_student_reliability("data_v2.xlsx")
         elif metric == "systematic deviations":
             weights = [0.8140871113424963, 0.6365323717653268, 0.17101072421329433]  # values of correlations found earlier, not dynamic yet
-            values = weights[0]*np.abs(sys_high_low_official("data_v2.xlsx")) + weights[1]*sys_spread_official("data_v2.xlsx") + weights[2]*np.abs(sys_dev_ordering())
+            values = weights[0]*np.abs(sys_high_low_official("data_v2.xlsx")) + weights[1]*sys_spread_official("data_v2.xlsx") + weights[2]*np.abs(sys_dev_ordering("data_v2.xlsx"))
+        elif metric == "all individual metrics combined":
+            weights = [0.05419982703810962, 0.2887592359980593, 0.7098815979902631, 0.8140871113424963, 0.6365323717653268, 0.17101072421329433]
+            values = weights[0]*compute_student_remarks() + weights[1]*pearson_per_student_formatted("data_v2.xlsx") + weights[2]*compute_student_reliability("data_v2.xlsx") + weights[3]*np.abs(sys_high_low_official("data_v2.xlsx")) + weights[4]*sys_spread_official("data_v2.xlsx") + weights[5]*np.abs(sys_dev_ordering("data_v2.xlsx"))
         else:
             print("Metrics " + metric + " was not recognized...")
             return
