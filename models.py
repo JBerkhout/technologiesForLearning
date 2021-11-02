@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from pandas.core.frame import DataFrame
+
+from remarks_size import compute_student_remarks, compute_student_topic_remarks
 from variability import read_topic_variability_statistics
 from accuracy import get_accuracy
 from reliability import compute_student_reliability, compute_student_topic_reliability
@@ -19,6 +21,8 @@ import neural_network as nn
 from scipy.stats import pearsonr
 import training_data_generation as gen
 from pre_processing import get_reviewer_grade_sets
+
+VAR_PER_TOPIC_REVERSE = (np.max(read_topic_variability_statistics(True)) - read_topic_variability_statistics(True))
 
 
 # Use: python models.py -t rule -m simple -i data_v2.xlsx
@@ -46,6 +50,10 @@ def main(args):
 
         elif (name == "accuracy"):
             print(accuracy_grades(False, input_path))
+
+        elif (name == "remarks size"): 
+            # Solo: remarks size
+            print(remarks_size_grades(False))
 
         elif (name == "validity"):
             # Solo: validity
@@ -85,9 +93,9 @@ def main(args):
 
         elif (name == "val_rel"):
             # Combined: validity and reliability
-            pear = pearson_per_student_formatted()
+            pear = pearson_per_student_formatted(input_path)
             normalized_pear = normalize(pear, -1, 1, 0.2)
-            rel = pearson_per_student_formatted()  # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
+            rel = compute_student_reliability(input_path)
             normalized_rel = normalize(rel, -1, 1, 0.2)
 
             total = (normalized_pear + normalized_rel) / 2
@@ -110,6 +118,8 @@ def main(args):
             dev_wide = sys_dev_wide_grades(False, input_path)
             dev_ord = sys_dev_order_grades(False, input_path)
             validity = validity_grades(False, input_path)
+            reliability = reliability_grades(False, input_path)
+            remarks_size = remarks_size_grades(False)
 
             # total = (normalized_pear + normalized_rel + dev_high + dev_wide + dev_ord) / 5
             # print(total)
@@ -127,13 +137,17 @@ def main(args):
         elif (name == "accuracy"):
             nn_model([accuracy_grades(True, input_path)], [accuracy_grades(True, input_path_pred)], True)
 
+        elif (name == "remarks size"): 
+            # Solo: remarks size
+            nn_model([remarks_size_grades(True)], [remarks_size_grades(True)], True)
+
         elif (name == "validity"):
             # Solo: validity
             nn_model([validity_grades(True, input_path)], [validity_grades(True, input_path_pred)], True)
 
         elif (name == "reliability"):
             # Solo: reliability
-            print("Not implemented")
+            nn_model([reliability_grades(True, input_path)], [reliability_grades(True, input_path_pred)], True)
 
         elif (name == "sys_dev_high"):
             # Solo: systematic deviation: high/low
@@ -171,9 +185,11 @@ def main(args):
 
         elif (name == "all"):
             # Combined: # of reviews handed in, length of comments and consistency (variability of grades of a single student)
-            pear = pearson_per_student_formatted()
+            rem = compute_student_remarks()
+            normalized_rem = normalize(rem, -1, 1, 0.2)
+            pear = pearson_per_student_formatted(input_path)
             normalized_pear = normalize(pear, -1, 1, 0.2)
-            rel = pearson_per_student_formatted()  # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
+            rel = compute_student_reliability(input_path)
             normalized_rel = normalize(rel, -1, 1, 0.2)
             sys_dev_high = compute_systematic_deviation_statistics(input_path)[0]
             normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
@@ -182,8 +198,8 @@ def main(args):
             sys_dev_ord = compute_systematic_deviation_statistics(input_path)[1]
             normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
 
-            total = [normalized_pear, normalized_rel, normalized_high, normalized_dev_wide, normalized_dev_ord]
-            nn_model(total, np.empty([5, config.r_count]), True)
+            total = [normalized_rem, normalized_pear, normalized_rel, normalized_high, normalized_dev_wide, normalized_dev_ord]
+            nn_model(total, np.empty([6, config.r_count]), True)
 
         else:
             print("Model name not found")
@@ -228,7 +244,7 @@ def accuracy_grades(use_nn, input_path, incl_variability=False):
             if np.isnan(student_accs).all():
                 in_acc.append(np.nan)
             else:
-                in_acc.append(np.nanmean(read_topic_variability_statistics(True) * student_accs))
+                in_acc.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_accs))
 
     max_val = np.nanmax(in_acc)
     acc = max_val - in_acc
@@ -237,6 +253,31 @@ def accuracy_grades(use_nn, input_path, incl_variability=False):
     mean = np.nanmean(acc)
     stdev = np.nanstd(acc)
     z = (acc - mean) / stdev
+    percentage = np.nan_to_num(7.0 + z)
+
+    i = 0
+    for value in percentage:
+        percentage[i] = max(0, min(10, value))
+        i += 1
+    return (percentage)
+
+
+def remarks_size_grades(use_nn, incl_variability=False):
+    if not incl_variability:
+        remarks_sizes = compute_student_remarks()
+    else:
+        remarks_sizes = []
+        for student_remarks_sizes in compute_student_topic_remarks():
+            if np.isnan(student_remarks_sizes).all():
+                remarks_sizes.append(np.nan)
+            else:
+                remarks_sizes.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_remarks_sizes))
+
+    if (use_nn):
+        return remarks_sizes
+    mean = np.nanmean(remarks_sizes)
+    stdev = np.nanstd(remarks_sizes)
+    z = (remarks_sizes - mean) / stdev
     percentage = np.nan_to_num(7.0 + z)
 
     i = 0
@@ -255,7 +296,7 @@ def reliability_grades(use_nn, input_path, incl_variability=False):
             if np.isnan(student_rels).all():
                 rel.append(np.nan)
             else:
-                rel.append(np.nanmean(read_topic_variability_statistics(True) * student_rels))
+                rel.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_rels))
 
     max_val = np.nanmax(rel)
     rel = max_val - rel
@@ -284,7 +325,7 @@ def validity_grades(use_nn, input_path, incl_variability=False):
             if np.isnan(student_pears).all():
                 pear.append(np.nan)
             else:
-                pear.append(np.nanmean((np.max(read_topic_variability_statistics(True)) - read_topic_variability_statistics(True)) * student_pears))
+                pear.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_pears))
 
     abs_pear = np.abs(pear)
     if (use_nn):
@@ -311,7 +352,7 @@ def sys_dev_high_grades(use_nn, input_path, incl_variability=False):
             if np.isnan(student_sys_devs).all():
                 sys_dev.append(np.nan)
             else:
-                sys_dev.append(np.nanmean(read_topic_variability_statistics(True) * student_sys_devs))
+                sys_dev.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_sys_devs))
 
     abs_sys_dev = np.abs(sys_dev)
     max_val = np.nanmax(abs_sys_dev)
@@ -340,7 +381,7 @@ def sys_dev_wide_grades(use_nn, input_path, incl_variability=False):
             if np.isnan(student_sys_devs).all():
                 sys_dev.append(np.nan)
             else:
-                sys_dev.append(np.nanmean(read_topic_variability_statistics(True) * student_sys_devs))
+                sys_dev.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_sys_devs))
 
     max_val = np.nanmax(sys_dev)
     abs_sys_dev_flip = max_val - sys_dev
@@ -367,7 +408,7 @@ def sys_dev_order_grades(use_nn, input_path, incl_variability=False):
             if np.isnan(student_sys_devs).all():
                 sys_dev.append(np.nan)
             else:
-                sys_dev.append(np.nanmean((np.max(read_topic_variability_statistics(True)) - read_topic_variability_statistics(True)) * student_sys_devs))
+                sys_dev.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_sys_devs))
 
     abs_sys_dev = np.abs(sys_dev)
     if (use_nn):
@@ -460,18 +501,20 @@ def nn_model(train_input_data, predict_input_data, train_network):
 
 
 # change colors and run the line below to change the colors used in the plot
-COLORS = ['#ff1969', '#ffbd59', '#00c2cb', '#3788d4', '#044aad', '#000000']
+COLORS = ['#ff1969', '#ffbd59', '#00c2cb', '#3788d4', '#044aad', '7317ae', '#000000']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 
 
 def plot_grades_per_reviewer_rule_based(with_variability=False):
     metrics = ["systematic problems in ordering", "systematic broad/narrow peer bias", "systematic high/low peer bias",
-               "reliability", "validity", "accuracy"]
+               "reliability", "validity", "remarks size", "accuracy"]
     reviewer_ids = [i for i in range(1, config.r_count + 1)]
 
     for metric in metrics:
         if metric == "accuracy":
             grades = accuracy_grades(False, "data_v2.xlsx", with_variability)
+        elif metric == "remarks size":
+            grades = remarks_size_grades(False, with_variability)
         elif metric == "validity":
             grades = validity_grades(False, "data_v2.xlsx", with_variability)
         elif metric == "reliability":
@@ -504,7 +547,7 @@ def plot_grades_per_reviewer_rule_based(with_variability=False):
 def plot_correlation_grades_with_acc(model="rule-based", with_variability=False):
     # neural network model not yet added, because not yet implemented
     # (in)accuracy used for 'true' grades for quality
-    metrics = ["validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias",
+    metrics = ["remarks size", "validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias",
                "systematic problems in ordering"]
     acc = accuracy_grades(False, "data_v2.xlsx")
 
@@ -512,7 +555,9 @@ def plot_correlation_grades_with_acc(model="rule-based", with_variability=False)
     p_values = []
     for metric in metrics:
         if model == "rule-based":
-            if metric == "validity":
+            if metric == "remarks size":
+                values = remarks_size_grades(False, with_variability)
+            elif metric == "validity":
                 values = validity_grades(False, "data_v2.xlsx", with_variability)
             elif metric == "reliability":
                 values = reliability_grades(False, "data_v2.xlsx", with_variability)
@@ -526,7 +571,9 @@ def plot_correlation_grades_with_acc(model="rule-based", with_variability=False)
                 print("Metrics " + metric + " was not recognized...")
                 return
         elif model == "neural network":
-            if metric == "validity":
+            if metric == "remarks size":
+                values = not_implemented_yet()
+            elif metric == "validity":
                 values = not_implemented_yet()
             elif metric == "reliability":
                 values = not_implemented_yet()

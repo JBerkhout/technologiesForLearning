@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from numpy import ndarray
-
+import config
 from pre_processing import get_review_amount_list
 
 
@@ -9,7 +9,7 @@ from pre_processing import get_review_amount_list
 def compute_student_remarks() -> ndarray:
     data_dict = pd.read_excel("data_v2.xlsx", None)
     result_output = []
-    reviews_per_student = get_review_amount_list(data_dict)
+    reviews_per_student = get_review_amount_list(data_dict, config.r_count)
 
     for student in range(1, 45):
         total_student_str = ""
@@ -36,12 +36,10 @@ def compute_student_remarks() -> ndarray:
 # Compute the average size of the remarks for each students
 def compute_student_topic_remarks() -> ndarray:
     data_dict = pd.read_excel("data_v2.xlsx", None)
-    result_output = []
-    reviews_per_student = get_review_amount_list(data_dict)
+    result_output = np.zeros(shape=(config.r_count, 22))
+    reviews_per_student = get_review_amount_list(data_dict, config.r_count)
 
     for student in range(1, 45):
-        total_student = []
-
         for topic in reviews_per_student[student]:
             student_per_topic = ""
             tab_name = 'topic' + str(topic)
@@ -60,11 +58,9 @@ def compute_student_topic_remarks() -> ndarray:
             else:
                 av_char_amount = 0
 
-            total_student.append(av_char_amount)
+            result_output[student-1][topic-1] = av_char_amount
 
-        result_output.append(total_student)
-
-    return np.array(result_output)
+    return result_output
 
 
 

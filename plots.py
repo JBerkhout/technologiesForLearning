@@ -9,6 +9,7 @@ from pre_processing import get_topics_names_dict, get_theme_names_dict
 
 # from models import r_count
 from accuracy import get_accuracy, accuracy_per_topic
+from remarks_size import compute_student_remarks
 from systematic_deviation import sys_high_low_official, sys_spread_official, sys_dev_ordering
 from validity import pearson_per_student_formatted
 from variability import read_topic_variability_statistics
@@ -27,6 +28,8 @@ def plot_per_reviewer(metric):
     y_label = metric.capitalize()
     if metric == "inaccuracy":
         out = get_accuracy(INPUT_PATH)
+    elif metric == "remarks size":
+        out = compute_student_remarks()
     elif metric == "validity":
         out = pearson_per_student_formatted(INPUT_PATH)
     elif metric == "reliability":
@@ -107,13 +110,15 @@ def plot_per_topic(metric, with_names=True, grouped="not"):
 
 def plot_correlation_metrics_with_acc():
     # (in)accuracy used for 'true' grades for quality
-    metrics = ["validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
+    metrics = ["remarks size", "validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias", "systematic problems in ordering"]
     acc = get_accuracy(INPUT_PATH)
 
     out = []
     p_values = []
     for metric in metrics:
-        if metric == "validity":
+        if metric == "remarks size":
+            values = compute_student_remarks()
+        elif metric == "validity":
             values = pearson_per_student_formatted("data_v2.xlsx")
         elif metric == "reliability":
             values = compute_student_reliability("data_v2.xlsx")
@@ -142,10 +147,10 @@ def plot_correlation_metrics_with_acc():
     bars = plt.bar(metrics_labels, out)  # , color=COLOR)
     for bar_id in range(len(bars)):
         plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005, "p-value: " + "{:.2e}".format(p_values[bar_id]))
-    plt.title('Bar plot of absolute correlation with accuracy for each metric per reviewer', fontsize=25)
-    plt.xlabel('Metric', fontsize=20)
-    plt.xticks(rotation=90, fontsize=15)
-    plt.ylabel('Absolute correlation', fontsize=20)
+    plt.title('Bar plot of absolute correlation with accuracy for each metric per reviewer')  # , fontsize=25)
+    plt.xlabel('Metric')  # , fontsize=20)
+    plt.xticks(rotation=90)  # , fontsize=15)
+    plt.ylabel('Absolute correlation')  # , fontsize=20)
     plt.grid()
     plt.show()
 
