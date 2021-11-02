@@ -553,6 +553,38 @@ def plot_grades_per_reviewer_rule_based(with_variability=False):
     plt.show()
 
 
+def plot_grades_per_reviewer_rule_based_combined(with_variability=False):
+    metrics = ["all individual metrics combined", "systematic deviations", "validity and reliability", "accuracy"]
+    reviewer_ids = [i for i in range(1, config.r_count + 1)]
+
+    for metric in metrics:
+        if metric == "accuracy":
+            grades = accuracy_grades(False, "data_v2.xlsx", with_variability)
+        elif metric == "validity and reliability":
+            grades = val_rel_grades("data_v2.xlsx")
+        elif metric == "systematic deviations":
+            grades = full_sys_dev_grades("data_v2.xlsx")
+        elif metric == "all individual metrics combined":
+            grades = all_grades("data_v2.xlsx")
+        else:
+            print("Metrics " + metric + " was not recognized...")
+            return
+
+        assert grades.ndim == 1
+        assert len(grades) == config.r_count
+        plt.scatter(reviewer_ids, grades, label=metric)
+
+    if not with_variability:
+        plt.title('Bar plot of rule-based combined model grades for each peer reviewer')
+    else:
+        plt.title('Bar plot of rule-based combined model grades for each peer reviewer considering variability of each topic')
+    plt.xlabel('ID of peer reviewer')
+    plt.ylabel("Grades according to rule-based model")
+    plt.grid()
+    plt.legend()
+    plt.show()
+
+
 def plot_correlation_grades_with_acc(model="rule-based", with_variability=False):
     # neural network model not yet added, because not yet implemented
     # (in)accuracy used for 'true' grades for quality
@@ -615,6 +647,62 @@ def plot_correlation_grades_with_acc(model="rule-based", with_variability=False)
         plt.title('Bar plot of absolute correlation with rule-based grades for each metric model')
     else:
         plt.title('Bar plot of absolute correlation with rule-based grades for each metric model considering variability of each topic')
+    plt.xlabel('Metric')
+    # plt.xticks(rotation=90)
+    plt.ylabel('Absolute correlation')
+    plt.grid()
+    plt.show()
+
+
+def plot_correlation_grades_with_acc_combined_models(model="rule-based", with_variability=False):
+    # neural network model not yet added, because not yet implemented
+    # (in)accuracy used for 'true' grades for quality
+    metrics = ["validity and reliability", "systematic deviations", "all individual metrics combined"]
+    acc = accuracy_grades(False, "data_v2.xlsx")
+
+    out = []
+    p_values = []
+    for metric in metrics:
+        if model == "rule-based":
+            if metric == "validity and reliability":
+                values = val_rel_grades("data_v2.xlsx")
+            elif metric == "systematic deviations":
+                values = full_sys_dev_grades("data_v2.xlsx")
+            elif metric == "all individual metrics combined":
+                values = all_grades("data_v2.xlsx")
+            else:
+                print("Metrics " + metric + " was not recognized...")
+                return
+        elif model == "neural network":
+            if metric == "validity and reliability":
+                values = not_implemented_yet()
+            elif metric == "systematic deviations":
+                values = not_implemented_yet()
+            elif metric == "all individual metrics combined":
+                values = not_implemented_yet()
+            else:
+                print("Metrics " + metric + " was not recognized...")
+                return
+        else:
+            print("Model " + model + " was not recognized...")
+            return
+
+        single_2d_arr = np.vstack([values, acc])
+        without_nan = single_2d_arr[:, ~np.any(np.isnan(single_2d_arr), axis=0)]
+
+        corr, p = pearsonr(without_nan[0], without_nan[1])
+        out.append(np.abs(corr))
+        p_values.append(p)
+
+    # print(out)
+    bars = plt.bar([metric.capitalize() for metric in metrics], out)  # , color=COLOR)
+    for bar_id in range(len(bars)):
+        plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005,
+                 "p-value: " + "{:.2e}".format(p_values[bar_id]))
+    if not with_variability:
+        plt.title('Bar plot of absolute correlation with rule-based grades for each combined metric model')
+    else:
+        plt.title('Bar plot of absolute correlation with rule-based grades for each combined metric model considering variability of each topic')
     plt.xlabel('Metric')
     # plt.xticks(rotation=90)
     plt.ylabel('Absolute correlation')
