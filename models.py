@@ -10,7 +10,7 @@ from pandas.core.frame import DataFrame
 
 from remarks_size import compute_student_remarks, compute_student_topic_remarks
 from variability import read_topic_variability_statistics
-from accuracy import get_accuracy
+from accuracy import get_accuracy, accuracy_per_topic
 from reliability import compute_student_reliability, compute_student_topic_reliability
 from validity import pearson_per_student_formatted, pearson_per_topic_formatted
 from systematic_deviation import compute_systematic_deviation_statistics, sys_dev_ordering, sys_high_low_official, \
@@ -23,7 +23,7 @@ import training_data_generation as gen
 from pre_processing import get_reviewer_grade_sets
 
 VAR_PER_TOPIC_REVERSE = (np.max(read_topic_variability_statistics(True)) - read_topic_variability_statistics(True))
-
+ACC_OVER_TIME_REVERSE = (np.max(accuracy_per_topic("data_v2.xlsx")) - accuracy_per_topic("data_v2.xlsx"))
 
 # Use: python models.py -t rule -m simple -i data_v2.xlsx
 # to run the NN
@@ -236,7 +236,7 @@ def normalize(values, lower_bound, upper_bound, upper_cutoff):
     return grades
 
 
-def accuracy_grades(use_nn, input_path, incl_variability=False):
+def accuracy_grades(use_nn, input_path, incl=""):
     # try:
     #     args
     # except NameError:
@@ -244,16 +244,23 @@ def accuracy_grades(use_nn, input_path, incl_variability=False):
     # else:
     #     in_acc = get_accuracy(args.input)
 
-    if not incl_variability:
-        in_acc = get_accuracy(input_path)
-        # normalized_acc = normalize(acc, 0, 3, 1)
-    else:
+    if incl == "variability":
         in_acc = []
         for student_accs in get_accuracy(input_path, True):
             if np.isnan(student_accs).all():
                 in_acc.append(np.nan)
             else:
                 in_acc.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_accs))
+    elif incl == "over time":
+        in_acc = []
+        for student_accs in get_accuracy(input_path, True):
+            if np.isnan(student_accs).all():
+                in_acc.append(np.nan)
+            else:
+                in_acc.append(np.nanmean(ACC_OVER_TIME_REVERSE * student_accs))
+    else:
+        in_acc = get_accuracy(input_path)
+        # normalized_acc = normalize(acc, 0, 3, 1)
 
     max_val = np.nanmax(in_acc)
     acc = max_val - in_acc
@@ -271,16 +278,23 @@ def accuracy_grades(use_nn, input_path, incl_variability=False):
     return (percentage)
 
 
-def remarks_size_grades(use_nn, incl_variability=False):
-    if not incl_variability:
-        remarks_sizes = compute_student_remarks()
-    else:
+def remarks_size_grades(use_nn, incl=""):
+    if incl == "over time":
+        remarks_sizes = []
+        for student_remarks_sizes in compute_student_topic_remarks():
+            if np.isnan(student_remarks_sizes).all():
+                remarks_sizes.append(np.nan)
+            else:
+                remarks_sizes.append(np.nanmean(ACC_OVER_TIME_REVERSE * student_remarks_sizes))
+    elif incl == "variability":
         remarks_sizes = []
         for student_remarks_sizes in compute_student_topic_remarks():
             if np.isnan(student_remarks_sizes).all():
                 remarks_sizes.append(np.nan)
             else:
                 remarks_sizes.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_remarks_sizes))
+    else:
+        remarks_sizes = compute_student_remarks()
 
     if (use_nn):
         return remarks_sizes
@@ -296,16 +310,23 @@ def remarks_size_grades(use_nn, incl_variability=False):
     return (percentage)
 
 
-def reliability_grades(use_nn, input_path, incl_variability=False):
-    if not incl_variability:
-        rel = compute_student_reliability(input_path)
-    else:
+def reliability_grades(use_nn, input_path, incl=""):
+    if incl == "variability":
         rel = []
         for student_rels in compute_student_topic_reliability():
             if np.isnan(student_rels).all():
                 rel.append(np.nan)
             else:
                 rel.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_rels))
+    elif incl == "over time":
+        rel = []
+        for student_rels in compute_student_topic_reliability():
+            if np.isnan(student_rels).all():
+                rel.append(np.nan)
+            else:
+                rel.append(np.nanmean(ACC_OVER_TIME_REVERSE * student_rels))
+    else:
+        rel = compute_student_reliability(input_path)
 
     max_val = np.nanmax(rel)
     rel = max_val - rel
@@ -323,18 +344,24 @@ def reliability_grades(use_nn, input_path, incl_variability=False):
     return percentage
 
 
-def validity_grades(use_nn, input_path, incl_variability=False):
+def validity_grades(use_nn, input_path, incl=""):
     # Pearsons scales from -1 to +1, where higher is better.
-
-    if not incl_variability:
-        pear = pearson_per_student_formatted(input_path)
-    else:
+    if incl == "variability":
         pear = []
         for student_pears in pearson_per_topic_formatted(input_path):
             if np.isnan(student_pears).all():
                 pear.append(np.nan)
             else:
                 pear.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_pears))
+    elif incl == "over time":
+        pear = []
+        for student_pears in pearson_per_topic_formatted(input_path):
+            if np.isnan(student_pears).all():
+                pear.append(np.nan)
+            else:
+                pear.append(np.nanmean(ACC_OVER_TIME_REVERSE * student_pears))
+    else:
+        pear = pearson_per_student_formatted(input_path)
 
     abs_pear = np.abs(pear)
     if (use_nn):
@@ -351,17 +378,24 @@ def validity_grades(use_nn, input_path, incl_variability=False):
     return (percentage)
 
 
-def sys_dev_high_grades(use_nn, input_path, incl_variability=False):
-    if not incl_variability:
-        sys_dev = compute_systematic_deviation_statistics(input_path)[0]
-        # normalized_dev = normalize(sys_dev, -2, 2, 0.5)
-    else:
+def sys_dev_high_grades(use_nn, input_path, incl=""):
+    if incl == "variability":
         sys_dev = []
         for student_sys_devs in sys_high_low_official("data_v2.xlsx", True):
             if np.isnan(student_sys_devs).all():
                 sys_dev.append(np.nan)
             else:
                 sys_dev.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_sys_devs))
+    elif incl == "over time":
+        sys_dev = []
+        for student_sys_devs in sys_high_low_official("data_v2.xlsx", True):
+            if np.isnan(student_sys_devs).all():
+                sys_dev.append(np.nan)
+            else:
+                sys_dev.append(np.nanmean(ACC_OVER_TIME_REVERSE * student_sys_devs))
+    else:
+        sys_dev = compute_systematic_deviation_statistics(input_path)[0]
+        # normalized_dev = normalize(sys_dev, -2, 2, 0.5)
 
     abs_sys_dev = np.abs(sys_dev)
     max_val = np.nanmax(abs_sys_dev)
@@ -380,17 +414,24 @@ def sys_dev_high_grades(use_nn, input_path, incl_variability=False):
     return (percentage)
 
 
-def sys_dev_wide_grades(use_nn, input_path, incl_variability=False):
-    if not incl_variability:
-        sys_dev = compute_systematic_deviation_statistics(input_path)[1]
-        # normalized_dev = normalize(sys_dev, -2, 2, 0.5)
-    else:
+def sys_dev_wide_grades(use_nn, input_path, incl=""):
+    if incl == "variability":
         sys_dev = []
         for student_sys_devs in sys_spread_official("data_v2.xlsx", True):
             if np.isnan(student_sys_devs).all():
                 sys_dev.append(np.nan)
             else:
                 sys_dev.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_sys_devs))
+    if incl == "over time":
+        sys_dev = []
+        for student_sys_devs in sys_spread_official("data_v2.xlsx", True):
+            if np.isnan(student_sys_devs).all():
+                sys_dev.append(np.nan)
+            else:
+                sys_dev.append(np.nanmean(ACC_OVER_TIME_REVERSE * student_sys_devs))
+    else:
+        sys_dev = compute_systematic_deviation_statistics(input_path)[1]
+        # normalized_dev = normalize(sys_dev, -2, 2, 0.5)
 
     max_val = np.nanmax(sys_dev)
     abs_sys_dev_flip = max_val - sys_dev
@@ -408,16 +449,23 @@ def sys_dev_wide_grades(use_nn, input_path, incl_variability=False):
     return (percentage)
 
 
-def sys_dev_order_grades(use_nn, input_path, incl_variability=False):
-    if not incl_variability:
-        sys_dev = sys_dev_ordering(input_path)
-    else:
+def sys_dev_order_grades(use_nn, input_path, incl=""):
+    if incl == "variability":
         sys_dev = []
         for student_sys_devs in sys_dev_ordering(input_path, True):
             if np.isnan(student_sys_devs).all():
                 sys_dev.append(np.nan)
             else:
                 sys_dev.append(np.nanmean(VAR_PER_TOPIC_REVERSE * student_sys_devs))
+    elif incl == "over time":
+        sys_dev = []
+        for student_sys_devs in sys_dev_ordering(input_path, True):
+            if np.isnan(student_sys_devs).all():
+                sys_dev.append(np.nan)
+            else:
+                sys_dev.append(np.nanmean(ACC_OVER_TIME_REVERSE * student_sys_devs))
+    else:
+        sys_dev = sys_dev_ordering(input_path)
 
     abs_sys_dev = np.abs(sys_dev)
     if (use_nn):
@@ -514,26 +562,26 @@ COLORS = ['#ff1969', '#ffbd59', '#00c2cb', '#3788d4', '#044aad', '7317ae', '#000
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler('color', COLORS)
 
 
-def plot_grades_per_reviewer_rule_based(with_variability=False):
+def plot_grades_per_reviewer_rule_based(incl=""):
     metrics = ["systematic problems in ordering", "systematic broad/narrow peer bias", "systematic high/low peer bias",
                "reliability", "validity", "remarks size", "accuracy"]
     reviewer_ids = [i for i in range(1, config.r_count + 1)]
 
     for metric in metrics:
         if metric == "accuracy":
-            grades = accuracy_grades(False, "data_v2.xlsx", with_variability)
+            grades = accuracy_grades(False, "data_v2.xlsx", incl)
         elif metric == "remarks size":
-            grades = remarks_size_grades(False, with_variability)
+            grades = remarks_size_grades(False, incl)
         elif metric == "validity":
-            grades = validity_grades(False, "data_v2.xlsx", with_variability)
+            grades = validity_grades(False, "data_v2.xlsx", incl)
         elif metric == "reliability":
-            grades = reliability_grades(False, "data_v2.xlsx", with_variability)
+            grades = reliability_grades(False, "data_v2.xlsx", incl)
         elif metric == "systematic high/low peer bias":
-            grades = sys_dev_high_grades(False, "data_v2.xlsx", with_variability)
+            grades = sys_dev_high_grades(False, "data_v2.xlsx", incl)
         elif metric == "systematic broad/narrow peer bias":
-            grades = sys_dev_wide_grades(False, "data_v2.xlsx", with_variability)
+            grades = sys_dev_wide_grades(False, "data_v2.xlsx", incl)
         elif metric == "systematic problems in ordering":
-            grades = sys_dev_order_grades(False, "data_v2.xlsx", with_variability)
+            grades = sys_dev_order_grades(False, "data_v2.xlsx", incl)
         else:
             print("Metrics " + metric + " was not recognized...")
             return
@@ -542,10 +590,12 @@ def plot_grades_per_reviewer_rule_based(with_variability=False):
         assert len(grades) == config.r_count
         plt.scatter(reviewer_ids, grades, label=metric)
 
-    if not with_variability:
-        plt.title('Bar plot of rule-based model grades for each peer reviewer')
-    else:
+    if incl == "variability":
         plt.title('Bar plot of rule-based model grades for each peer reviewer considering variability of each topic')
+    elif incl == "over time":
+        plt.title('Bar plot of rule-based model grades for each peer reviewer considering over time performance')
+    else:
+        plt.title('Bar plot of rule-based model grades for each peer reviewer')
     plt.xlabel('ID of peer reviewer')
     plt.ylabel("Grades according to rule-based model")
     plt.grid()
@@ -553,13 +603,13 @@ def plot_grades_per_reviewer_rule_based(with_variability=False):
     plt.show()
 
 
-def plot_grades_per_reviewer_rule_based_combined(with_variability=False):
+def plot_grades_per_reviewer_rule_based_combined():
     metrics = ["all individual metrics combined", "systematic deviations", "validity and reliability", "accuracy"]
     reviewer_ids = [i for i in range(1, config.r_count + 1)]
 
     for metric in metrics:
         if metric == "accuracy":
-            grades = accuracy_grades(False, "data_v2.xlsx", with_variability)
+            grades = accuracy_grades(False, "data_v2.xlsx", "")
         elif metric == "validity and reliability":
             grades = val_rel_grades("data_v2.xlsx")
         elif metric == "systematic deviations":
@@ -574,10 +624,7 @@ def plot_grades_per_reviewer_rule_based_combined(with_variability=False):
         assert len(grades) == config.r_count
         plt.scatter(reviewer_ids, grades, label=metric)
 
-    if not with_variability:
-        plt.title('Bar plot of rule-based combined model grades for each peer reviewer')
-    else:
-        plt.title('Bar plot of rule-based combined model grades for each peer reviewer considering variability of each topic')
+    plt.title('Bar plot of rule-based combined model grades for each peer reviewer')
     plt.xlabel('ID of peer reviewer')
     plt.ylabel("Grades according to rule-based model")
     plt.grid()
@@ -585,7 +632,7 @@ def plot_grades_per_reviewer_rule_based_combined(with_variability=False):
     plt.show()
 
 
-def plot_correlation_grades_with_acc(model="rule-based", with_variability=False):
+def plot_correlation_grades_with_acc(model="rule-based", incl=""):
     # neural network model not yet added, because not yet implemented
     # (in)accuracy used for 'true' grades for quality
     metrics = ["remarks size", "validity", "reliability", "systematic high/low peer bias", "systematic broad/narrow peer bias",
@@ -597,17 +644,17 @@ def plot_correlation_grades_with_acc(model="rule-based", with_variability=False)
     for metric in metrics:
         if model == "rule-based":
             if metric == "remarks size":
-                values = remarks_size_grades(False, with_variability)
+                values = remarks_size_grades(False, incl)
             elif metric == "validity":
-                values = validity_grades(False, "data_v2.xlsx", with_variability)
+                values = validity_grades(False, "data_v2.xlsx", incl)
             elif metric == "reliability":
-                values = reliability_grades(False, "data_v2.xlsx", with_variability)
+                values = reliability_grades(False, "data_v2.xlsx", incl)
             elif metric == "systematic high/low peer bias":
-                values = sys_dev_high_grades(False, "data_v2.xlsx", with_variability)
+                values = sys_dev_high_grades(False, "data_v2.xlsx", incl)
             elif metric == "systematic broad/narrow peer bias":
-                values = sys_dev_wide_grades(False, "data_v2.xlsx", with_variability)
+                values = sys_dev_wide_grades(False, "data_v2.xlsx", incl)
             elif metric == "systematic problems in ordering":
-                values = sys_dev_order_grades(False, "data_v2.xlsx", with_variability)
+                values = sys_dev_order_grades(False, "data_v2.xlsx", incl)
             else:
                 print("Metrics " + metric + " was not recognized...")
                 return
@@ -643,10 +690,12 @@ def plot_correlation_grades_with_acc(model="rule-based", with_variability=False)
     for bar_id in range(len(bars)):
         plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005,
                  "p-value: " + "{:.2e}".format(p_values[bar_id]))
-    if not with_variability:
-        plt.title('Bar plot of absolute correlation with rule-based grades for each metric model')
-    else:
+    if incl == "variability":
         plt.title('Bar plot of absolute correlation with rule-based grades for each metric model considering variability of each topic')
+    elif incl == "over time":
+        plt.title('Bar plot of absolute correlation with rule-based grades for each metric model considering performance over time')
+    else:
+        plt.title('Bar plot of absolute correlation with rule-based grades for each metric model')
     plt.xlabel('Metric')
     # plt.xticks(rotation=90)
     plt.ylabel('Absolute correlation')
@@ -654,7 +703,7 @@ def plot_correlation_grades_with_acc(model="rule-based", with_variability=False)
     plt.show()
 
 
-def plot_correlation_grades_with_acc_combined_models(model="rule-based", with_variability=False):
+def plot_correlation_grades_with_acc_combined_models(model="rule-based"):
     # neural network model not yet added, because not yet implemented
     # (in)accuracy used for 'true' grades for quality
     metrics = ["validity and reliability", "systematic deviations", "all individual metrics combined"]
@@ -699,10 +748,7 @@ def plot_correlation_grades_with_acc_combined_models(model="rule-based", with_va
     for bar_id in range(len(bars)):
         plt.text(bars[bar_id].get_x(), bars[bar_id].get_height() + .005,
                  "p-value: " + "{:.2e}".format(p_values[bar_id]))
-    if not with_variability:
-        plt.title('Bar plot of absolute correlation with rule-based grades for each combined metric model')
-    else:
-        plt.title('Bar plot of absolute correlation with rule-based grades for each combined metric model considering variability of each topic')
+    plt.title('Bar plot of absolute correlation with rule-based grades for each combined metric model')
     plt.xlabel('Metric')
     # plt.xticks(rotation=90)
     plt.ylabel('Absolute correlation')
