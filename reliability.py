@@ -34,7 +34,7 @@ def compute_student_reliability(input_path: str) -> ndarray:
 def compute_student_topic_reliability() -> ndarray:
     data_dict = pd.read_excel("data_v2.xlsx", None)
     result_output = []
-    reviews_per_student = get_review_amount_list(data_dict)
+    reviews_per_student = get_review_amount_list(data_dict, config.r_count)
 
     for student in range(1, config.r_count+1):
         total_student_array = np.zeros(shape=22)

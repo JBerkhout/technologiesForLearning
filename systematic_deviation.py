@@ -144,7 +144,10 @@ def sys_dev_ordering(input_path, split_topics=False):
     # calculate correlation between each reviewer's and average ranking of topics
     total_sys_dev = np.zeros(shape=config.r_count)
     for reviewer_id in range(0, len(reviewers_topic_ordering)):
-        total_sys_dev[reviewer_id], p = spearmanr(reviewers_topic_ordering[reviewer_id], avg_topic_ordering)
+        if np.isnan(means_topics_reviewers[reviewer_id]).all():
+            total_sys_dev[reviewer_id], p = np.nan, np.nan
+        else:
+            total_sys_dev[reviewer_id], p = spearmanr(reviewers_topic_ordering[reviewer_id], avg_topic_ordering)
 
     return total_sys_dev
 
@@ -162,7 +165,10 @@ def sys_dev_ordering_topics(reviewer_grade_sets):
         # calculate correlation between each reviewer's and average ranking of topics
         for reviewer_id in range(0, reviewer_grade_sets.shape[0]):
             reviewers_topic_ordering = np.argsort(reviewer_grade_sets[reviewer_id][topic_id])
-            total_topic_sys_dev[reviewer_id][topic_id], p = spearmanr(reviewers_topic_ordering, avg_topic_ordering)
+            if np.isnan(reviewer_grade_sets[reviewer_id][topic_id]).all():
+                total_topic_sys_dev[reviewer_id][topic_id], p = np.nan, np.nan
+            else:
+                total_topic_sys_dev[reviewer_id][topic_id], p = spearmanr(reviewers_topic_ordering, avg_topic_ordering)
 
     return total_topic_sys_dev
 
