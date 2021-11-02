@@ -77,53 +77,15 @@ def main(args):
 
         elif (name == "sys_dev_full"):
             # Combined: all systematic deviation metrics
-            dev_high = sys_dev_high_grades(False, input_path)
-            dev_wide = sys_dev_wide_grades(False, input_path)
-            dev_ord = sys_dev_order_grades(False, input_path)
-
-            acc = accuracy_grades(False, input_path)
-
-            corr_high = np.abs(pearsonr(acc, dev_high)[0])
-            corr_wide = np.abs(pearsonr(acc, dev_wide)[0])
-            corr_ord = np.abs(pearsonr(acc, dev_ord)[0])
-
-            total_dev = (dev_high * corr_high + dev_wide * corr_wide + dev_ord * corr_ord) / (
-                        corr_high + corr_wide + corr_ord)
-            print(total_dev)
+            print(full_sys_dev_grades(input_path))
 
         elif (name == "val_rel"):
             # Combined: validity and reliability
-            pear = pearson_per_student_formatted(input_path)
-            normalized_pear = normalize(pear, -1, 1, 0.2)
-            rel = compute_student_reliability(input_path)
-            normalized_rel = normalize(rel, -1, 1, 0.2)
-
-            total = (normalized_pear + normalized_rel) / 2
-            print(total)
+            print(val_rel_grades(input_path))
 
         elif (name == "all"):
             # Combined: # of reviews handed in, length of comments and consistency (variability of grades of a single student)
-            # pear = pearson_per_student_formatted()
-            # normalized_pear = normalize(pear, -1, 1, 0.2)
-            # rel = pearson_per_student_formatted() # TODO CHANGE WHEN RELIABILITY IS IMPLEMENTED
-            # normalized_rel = normalize(rel, -1, 1, 0.2)
-            # sys_dev_high = compute_systematic_deviation_statistics()[0]
-            # normalized_high = normalize(sys_dev_high, -2, 2, 0.5)
-            # sys_dev_wide = compute_systematic_deviation_statistics()[1]
-            # normalized_dev_wide = normalize(sys_dev_wide, -1, 1, .8)
-            # sys_dev_ord = compute_systematic_deviation_statistics()[1]
-            # normalized_dev_ord = normalize(sys_dev_ord, -1, 1, .8)
-
-            dev_high = sys_dev_high_grades(False, input_path)
-            dev_wide = sys_dev_wide_grades(False, input_path)
-            dev_ord = sys_dev_order_grades(False, input_path)
-            validity = validity_grades(False, input_path)
-            reliability = reliability_grades(False, input_path)
-            remarks_size = remarks_size_grades(False)
-
-            # total = (normalized_pear + normalized_rel + dev_high + dev_wide + dev_ord) / 5
-            # print(total)
-
+            print(all_grades(input_path))
         else:
             print("Model name not found")
 
@@ -206,6 +168,53 @@ def main(args):
     else:
         print("No such model type")
 
+def full_sys_dev_grades(input_path):
+    dev_high = sys_dev_high_grades(False, input_path)
+    dev_wide = sys_dev_wide_grades(False, input_path)
+    dev_ord = sys_dev_order_grades(False, input_path)
+
+    acc = accuracy_grades(False, input_path)
+
+    corr_high = np.abs(pearsonr(acc, dev_high)[0])
+    corr_wide = np.abs(pearsonr(acc, dev_wide)[0])
+    corr_ord = np.abs(pearsonr(acc, dev_ord)[0])
+
+    total_dev = (dev_high * corr_high + dev_wide * corr_wide + dev_ord * corr_ord) / (
+                corr_high + corr_wide + corr_ord)
+    return(total_dev)
+
+def val_rel_grades(input_path):
+    validity = validity_grades(False, input_path)
+    reliability = reliability_grades(False, input_path)
+
+    acc = accuracy_grades(False, input_path)
+
+    corr_val = np.abs(pearsonr(acc, validity)[0])
+    corr_rel = np.abs(pearsonr(acc, reliability)[0])
+
+    total = (validity * corr_val + reliability * corr_rel) / (corr_val + corr_rel)
+    return(total)
+
+def all_grades(input_path):
+    dev_high = sys_dev_high_grades(False, input_path)
+    dev_wide = sys_dev_wide_grades(False, input_path)
+    dev_ord = sys_dev_order_grades(False, input_path)
+    validity = validity_grades(False, input_path)
+    reliability = reliability_grades(False, input_path)
+    remarks_size = remarks_size_grades(False)
+
+    acc = accuracy_grades(False, input_path)
+
+    corr_high = np.abs(pearsonr(acc, dev_high)[0])
+    corr_wide = np.abs(pearsonr(acc, dev_wide)[0])
+    corr_ord = np.abs(pearsonr(acc, dev_ord)[0])
+    corr_val = np.abs(pearsonr(acc, validity)[0])
+    corr_rel = np.abs(pearsonr(acc, reliability)[0])
+    corr_rem = np.abs(pearsonr(acc, remarks_size)[0])
+
+    total = (dev_high * corr_high + dev_wide * corr_wide + dev_ord * corr_ord + validity * corr_val + reliability * corr_rel + remarks_size * corr_rem) / (
+                corr_high + corr_wide + corr_ord + corr_val + corr_rel + corr_rem)
+    return(total)
 
 # Method that normalizes output values to grades. values represents the array of values, lower and upper bound are the begin and end of the scale on which the values are placed, 
 # upper cutoff discounts the value required for a ten (higher value means higher grades all around)
